@@ -1,31 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2">
+<atlassian-plugin key="${atlassian.plugin.key}"
+                  name="${project.name}"
+                  plugins-version="2">
     <plugin-info>
         <description>${project.description}</description>
         <version>${project.version}</version>
-        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <vendor name="${project.organization.name}"
+                url="${project.organization.url}"/>
         <param name="plugin-icon">images/pluginIcon.png</param>
         <param name="plugin-logo">images/pluginLogo.png</param>
     </plugin-info>
 
-    <resource type="i18n" name="i18n" location="bamboo-plan-runner"/>
+    <resource type="i18n"
+              name="i18n"
+              location="bamboo-plan-runner"/>
 
-    <web-resource key="bamboo-plan-runner-resources" name="bamboo-plan-runner Web Resources">
+    <web-resource key="bamboo-plan-runner-resources"
+                  name="bamboo-plan-runner Web Resources">
         <dependency>com.atlassian.auiplugin:ajs</dependency>
-        <resource type="download" name="images/" location="/images"/>
+        <resource type="download"
+                  name="images/"
+                  location="/images"/>
         <context>bamboo-plan-runner</context>
     </web-resource>
 
-    <workflow-function key="bamboo-plan-runner-postfunction" name="Run Bamboo Plan"
+    <workflow-function key="bamboo-plan-runner-postfunction"
                        i18n-name-key="bamboo-plan-runner.postfunction.name"
                        class="com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.BambooPlanRunnerFactory">
         <description key="bamboo-plan-runner.postfunction.description"/>
         <function-class>com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.BambooPlanRunner
         </function-class>
-        <resource type="velocity" name="view" location="templates/postfunctions/bamboo-plan-runner.vm"/>
-        <resource type="velocity" name="input-parameters"
+        <resource type="velocity"
+                  name="view"
+                  location="templates/postfunctions/bamboo-plan-runner.vm"/>
+        <resource type="velocity"
+                  name="input-parameters"
                   location="templates/postfunctions/bamboo-plan-runner-input.vm"/>
-        <resource type="velocity" name="edit-parameters"
+        <resource type="velocity"
+                  name="edit-parameters"
                   location="templates/postfunctions/bamboo-plan-runner-input.vm"/>
     </workflow-function>
 </atlassian-plugin>
