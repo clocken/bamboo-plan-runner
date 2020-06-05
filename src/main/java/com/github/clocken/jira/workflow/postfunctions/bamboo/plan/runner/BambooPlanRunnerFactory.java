@@ -1,0 +1,89 @@
+/*
+ * Copyright 2020 clocken
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner;
+
+import com.atlassian.applinks.api.ReadOnlyApplicationLink;
+import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
+import com.atlassian.applinks.api.application.bamboo.BambooApplicationType;
+import com.atlassian.jira.plugin.workflow.AbstractWorkflowPluginFactory;
+import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.opensymphony.workflow.loader.AbstractDescriptor;
+import com.opensymphony.workflow.loader.FunctionDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import webwork.action.ActionContext;
+
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * This is the factory class responsible for dealing with the UI for the post-function.
+ * This is typically where you put default values into the velocity context and where you store user input.
+ */
+public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory implements WorkflowPluginFunctionFactory {
+
+    public static final String FIELD_APP_LINKS = "appLinks";
+    public static final String FIELD_SELECTED_APPLINK = "selectedAppLink";
+
+    private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
+    private final ReadOnlyApplicationLinkService applicationLinkService;
+
+    @Inject
+    public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService) {
+        this.applicationLinkService = applicationLinkService;
+    }
+
+    @Override
+    protected void getVelocityParamsForInput(Map<String, Object> velocityParams) {
+        Map<String, String[]> myParams = ActionContext.getParameters();
+
+        Iterable<ReadOnlyApplicationLink> bambooAppLinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
+        velocityParams.put(FIELD_APP_LINKS, bambooAppLinks);
+    }
+
+    @Override
+    protected void getVelocityParamsForEdit(Map<String, Object> velocityParams, AbstractDescriptor descriptor) {
+        getVelocityParamsForInput(velocityParams);
+        getVelocityParamsForView(velocityParams, descriptor);
+    }
+
+    @Override
+    protected void getVelocityParamsForView(Map<String, Object> velocityParams, AbstractDescriptor descriptor) {
+        if (!(descriptor instanceof FunctionDescriptor)) {
+            throw new IllegalArgumentException("Descriptor must be a FunctionDescriptor.");
+        }
+
+        FunctionDescriptor functionDescriptor = (FunctionDescriptor) descriptor;
+
+        String selectedAppLink = (String) functionDescriptor.getArgs().get(FIELD_SELECTED_APPLINK);
+        LOG.warn("Selected AppLink is: {}", selectedAppLink);
+        velocityParams.put(FIELD_SELECTED_APPLINK, selectedAppLink);
+    }
+
+
+    public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {
+        Map params = new HashMap();
+
+        String selectedAppLink = extractSingleParam(formParams, FIELD_SELECTED_APPLINK);
+        params.put(FIELD_SELECTED_APPLINK, selectedAppLink);
+
+        return params;
+    }
+
+}
