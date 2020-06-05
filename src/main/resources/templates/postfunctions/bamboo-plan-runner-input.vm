@@ -16,7 +16,7 @@
 
 <tr>
     <td class="fieldLabelArea">
-        AppLink:
+        $i18n.getText("bamboo-plan-runner.postfunction.label.applink")
     </td>
     <td nowrap>
         <select name="selectedAppLink" id="selectedAppLinkId">

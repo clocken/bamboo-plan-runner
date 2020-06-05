@@ -8,19 +8,18 @@
         <param name="plugin-logo">images/pluginLogo.png</param>
     </plugin-info>
 
-    <!-- add our i18n resource -->
     <resource type="i18n" name="i18n" location="bamboo-plan-runner"/>
 
-    <!-- add our web resources -->
     <web-resource key="bamboo-plan-runner-resources" name="bamboo-plan-runner Web Resources">
         <dependency>com.atlassian.auiplugin:ajs</dependency>
         <resource type="download" name="images/" location="/images"/>
         <context>bamboo-plan-runner</context>
     </web-resource>
 
-    <workflow-function key="bamboo-plan-runner" name="Run Bamboo Plan" i18n-name-key="bamboo-plan-runner.name"
+    <workflow-function key="bamboo-plan-runner-postfunction" name="Run Bamboo Plan"
+                       i18n-name-key="bamboo-plan-runner.postfunction.name"
                        class="com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.BambooPlanRunnerFactory">
-        <description key="bamboo-plan-runner.postfunction.description">Runs a bamboo plan with variables</description>
+        <description key="bamboo-plan-runner.postfunction.description"/>
         <function-class>com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.BambooPlanRunner
         </function-class>
         <resource type="velocity" name="view" location="templates/postfunctions/bamboo-plan-runner.vm"/>

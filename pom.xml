@@ -12,7 +12,7 @@
         <url>https://github.com/clocken</url>
     </organization>
 
-    <name>bamboo-plan-runner</name>
+    <name>Bamboo Plan Runner</name>
     <description>Bamboo Plan Runner for Atlassian JIRA Workflows.</description>
 
     <dependencies>
