@@ -44,6 +44,7 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
             selectedAppLink = "";
         }
 
+        LOG.debug("Appending '{}' to the Description of issue {}", selectedAppLink, issue.getKey());
         issue.setDescription(issue.getDescription() + selectedAppLink);
     }
 }

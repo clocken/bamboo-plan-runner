@@ -30,3 +30,20 @@
         </select>
     </td>
 </tr>
+
+<tr>
+    <td class="fieldLabelArea">
+        $i18n.getText("bamboo-plan-runner.postfunction.label.plan")
+    </td>
+    <td nowrap>
+        <select name="selectedPlan" id="selectedPlanId">
+        #foreach( $plan in $plans )
+            <option value="$plan.key"
+            #if( $plan.key.equals($selectedPlan) )
+                selected
+            #end
+            >$plan.name - $plan.key</option>
+        #end
+        </select>
+    </td>
+</tr>

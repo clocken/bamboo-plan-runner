@@ -16,12 +16,15 @@
 
 package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner;
 
+import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
 import com.atlassian.applinks.api.application.bamboo.BambooApplicationType;
 import com.atlassian.jira.plugin.workflow.AbstractWorkflowPluginFactory;
 import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.net.ResponseException;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.BambooRestApi;
 import com.opensymphony.workflow.loader.AbstractDescriptor;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 import org.slf4j.Logger;
@@ -40,13 +43,19 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
     public static final String FIELD_APP_LINKS = "appLinks";
     public static final String FIELD_SELECTED_APPLINK = "selectedAppLink";
+    public static final String FIELD_PLANS = "plans";
+    public static final String FIELD_SELECTED_PLAN = "selectedPlan";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
+
     private final ReadOnlyApplicationLinkService applicationLinkService;
+    private final BambooRestApi bambooRestApi;
 
     @Inject
-    public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService) {
+    public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
+                                   BambooRestApi bambooRestApi) {
         this.applicationLinkService = applicationLinkService;
+        this.bambooRestApi = bambooRestApi;
     }
 
     @Override
@@ -55,6 +64,15 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
         Iterable<ReadOnlyApplicationLink> bambooAppLinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
         velocityParams.put(FIELD_APP_LINKS, bambooAppLinks);
+
+        bambooAppLinks.forEach(bambooAppLink -> {
+            try {
+                velocityParams.put(FIELD_PLANS, bambooRestApi.plans(bambooAppLink));
+            } catch (CredentialsRequiredException | ResponseException ex) {
+                LOG.error("Error while fetching Bamboo plans: {}", ex.getMessage());
+                LOG.error("Exception: ", ex);
+            }
+        });
     }
 
     @Override
@@ -74,6 +92,10 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         String selectedAppLink = (String) functionDescriptor.getArgs().get(FIELD_SELECTED_APPLINK);
         LOG.warn("Selected AppLink is: {}", selectedAppLink);
         velocityParams.put(FIELD_SELECTED_APPLINK, selectedAppLink);
+
+        String selectedPlan = (String) functionDescriptor.getArgs().get(FIELD_SELECTED_PLAN);
+        LOG.warn("Selected Plan is {}", selectedPlan);
+        velocityParams.put(FIELD_SELECTED_PLAN, selectedPlan);
     }
 
 
@@ -82,6 +104,9 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
         String selectedAppLink = extractSingleParam(formParams, FIELD_SELECTED_APPLINK);
         params.put(FIELD_SELECTED_APPLINK, selectedAppLink);
+
+        String selectedPlan = extractSingleParam(formParams, FIELD_SELECTED_PLAN);
+        params.put(FIELD_SELECTED_PLAN, selectedPlan);
 
         return params;
     }
