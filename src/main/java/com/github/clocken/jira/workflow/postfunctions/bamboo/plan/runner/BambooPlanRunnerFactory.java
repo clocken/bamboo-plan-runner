@@ -20,19 +20,26 @@ import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
 import com.atlassian.applinks.api.application.bamboo.BambooApplicationType;
+import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.fields.FieldException;
+import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.plugin.workflow.AbstractWorkflowPluginFactory;
 import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
+import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.BambooRestApi;
 import com.opensymphony.workflow.loader.AbstractDescriptor;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import webwork.action.ActionContext;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,16 +52,23 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     public static final String FIELD_SELECTED_APPLINK = "selectedAppLink";
     public static final String FIELD_PLANS = "plans";
     public static final String FIELD_SELECTED_PLAN = "selectedPlan";
+    public static final String FIELD_FIELDS = "fields";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
+    private final FieldManager fieldManager;
+    private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
 
     @Inject
     public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
+                                   @ComponentImport FieldManager fieldManager,
+                                   @ComponentImport I18nHelper i18nHelper,
                                    BambooRestApi bambooRestApi) {
         this.applicationLinkService = applicationLinkService;
+        this.fieldManager = fieldManager;
+        this.i18nHelper = i18nHelper;
         this.bambooRestApi = bambooRestApi;
     }
 
@@ -73,6 +87,20 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
                 LOG.error("Exception: ", ex);
             }
         });
+
+        try {
+            List<Field> fields = new ArrayList<>();
+            fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
+                if (!navigableField.getName().startsWith("?")) {
+                    fields.add(navigableField);
+                }
+            });
+            fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()), i18nHelper.getText(field2.getNameKey())));
+
+            velocityParams.put(FIELD_FIELDS, fields);
+        } catch (FieldException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

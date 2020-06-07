@@ -47,3 +47,46 @@
         </select>
     </td>
 </tr>
+
+#foreach( $plan in $plans )
+    <table id="$plan.key_table">
+        <thead>
+            <tr>
+                <th>
+                    $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
+                </th>
+                <th>
+                    $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.variable.name")
+                </th>
+                <th>
+                    $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
+                </th>
+            <tr>
+        <thead>
+        <tbody>
+        #foreach( $variable in $plan.variables )
+            <tr>
+                <td>
+                    <input type="checkbox" name="use_${variable}" value="$variable" />
+                </td>
+                <td>
+                    $variable
+                </td>
+                <td>
+                    <select name="selectedFieldFor_${variable}" id="selectedFieldFor_${variable}_Id">
+                    #set( $selectedField = "$selectedFieldFor_$variable" )
+                    #set( $selectedFieldForThisParameter = "#evaluate( $selectedField )" )
+                    #foreach( $field in $fields )
+                        <option value="$field.id"
+                        #if( $field.id.equals($selectedFieldForThisParameter) )
+                            selected
+                        #end
+                        >$i18n.getText($field.nameKey)</option>
+                    #end
+                    </select>
+                </td>
+            </tr>
+        #end
+        </tbody>
+    </table>
+#end
