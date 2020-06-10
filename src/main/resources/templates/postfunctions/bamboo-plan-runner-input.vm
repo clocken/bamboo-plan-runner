@@ -14,79 +14,99 @@
  * limitations under the License.
 *#
 
+<script type="text/javascript">
+// <![CDATA[
+    function disableByAppLink(appLink) {
+        alert(AJS.$("#selected_plan_for_" + appLink + "_id").val());
+    }
+// ]]>
+</script>
+
 <tr>
     <td class="fieldLabelArea">
         $i18n.getText("bamboo-plan-runner.postfunction.label.applink")
     </td>
     <td nowrap>
-        <select name="selectedAppLink" id="selectedAppLinkId">
-        #foreach( $appLink in $appLinks )
-            <option value="$appLink.rpcUrl.toString()"
-            #if( $appLink.rpcUrl.toString().equals($selectedAppLink) )
-                selected
+        <select id="selected_applink_id"
+                name="selected_applink"
+                onchange="disableByAppLink(this.value)">
+            <option value="TEST">TEST</option>
+        #foreach( $applink in $applinks )
+            <option value="$applink.id"
+            #if( $applink.id.equals($selected_applink) )
+                    selected
             #end
-            >$appLink.name</option>
+            >$applink.name</option>
         #end
         </select>
     </td>
 </tr>
 
-<tr>
-    <td class="fieldLabelArea">
-        $i18n.getText("bamboo-plan-runner.postfunction.label.plan")
-    </td>
-    <td nowrap>
-        <select name="selectedPlan" id="selectedPlanId">
-        #foreach( $plan in $plans )
-            <option value="$plan.key"
-            #if( $plan.key.equals($selectedPlan) )
-                selected
+#foreach( $applink in $applinks )
+    <tr>
+        <td class="fieldLabelArea">
+            $i18n.getText("bamboo-plan-runner.postfunction.label.plan")
+        </td>
+        <td nowrap>
+            <select id="selected_plan_for_${applink.id}_id"
+                    name="selected_plan_for_${applink.id}">
+            #foreach( $plan in $plans_by_applink.get($applink.id) )
+                <option value="${applink.id}_${plan.key}"
+                #if( !$plan.enabled )
+                        title="$i18n.getText('bamboo-plan-runner.postfunction.title.plan.disabled')"
+                        disabled
+                #end
+                #set( $selected_plan_for_applink_var = "$selected_plan_for_${applink.id}" )
+                #set( $selected_plan_for_applink = "#evaluate( $selected_plan_for_applink_var )" )
+                #if( "${applink.id}_${plan.key}" == "$selected_plan_for_applink" )
+                        selected
+                #end
+                >$plan.name - $plan.key</option>
             #end
-            >$plan.name - $plan.key</option>
-        #end
-        </select>
-    </td>
-</tr>
+            </select>
+        </td>
+    </tr>
 
-#foreach( $plan in $plans )
-    <table id="$plan.key_table">
-        <thead>
-            <tr>
-                <th>
-                    $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
-                </th>
-                <th>
-                    $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.variable.name")
-                </th>
-                <th>
-                    $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
-                </th>
-            <tr>
-        <thead>
-        <tbody>
-        #foreach( $variable in $plan.variables )
-            <tr>
-                <td>
-                    <input type="checkbox" name="use_${variable}" value="$variable" />
-                </td>
-                <td>
-                    $variable
-                </td>
-                <td>
-                    <select name="selectedFieldFor_${variable}" id="selectedFieldFor_${variable}_Id">
-                    #set( $selectedField = "$selectedFieldFor_$variable" )
-                    #set( $selectedFieldForThisParameter = "#evaluate( $selectedField )" )
-                    #foreach( $field in $fields )
-                        <option value="$field.id"
-                        #if( $field.id.equals($selectedFieldForThisParameter) )
-                            selected
+    #foreach( $plan in $plans_by_applink.get($applink.id) )
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
+                    </th>
+                    <th>
+                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
+                    </th>
+                <tr>
+            <thead>
+            <tbody>
+            #foreach( $variable in $plan.variables )
+                <tr>
+                    <td>
+                        <label>
+                            <input type="checkbox" 
+                                   name="use_${applink.id}_${plan.key}_${variable}"
+                            #if( $variables_to_use.contains("use_${applink.id}_${plan.key}_${variable}") )
+                                checked
+                            #end />
+                            $variable
+                        </label>
+                    </td>
+                    <td>
+                        <select id="selected_field_for_${applink.id}_${plan.key}_${variable}_id"
+                                name="selected_field_for_${applink.id}_${plan.key}_${variable}">
+                        #foreach( $field in $fields )
+                            <option value="$field.id"
+                            #if( $field.id.equals($selected_fields_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}")) )
+                                    selected
+                            #end
+                            >$i18n.getText($field.nameKey)</option>
                         #end
-                        >$i18n.getText($field.nameKey)</option>
-                    #end
-                    </select>
-                </td>
-            </tr>
-        #end
-        </tbody>
-    </table>
+                        </select>
+                    </td>
+                </tr>
+            #end
+            </tbody>
+        </table>
+    #end
 #end

@@ -109,6 +109,7 @@ public final class BambooRestApiImpl implements BambooRestApi {
                                 plans.add(aPlan()
                                         .withKey(jsonResponse.getString("key"))
                                         .withName(jsonResponse.getString("shortName"))
+                                        .thatIsEnabled(jsonResponse.getBoolean("enabled"))
                                         // TODO: Handle optional description
                                         .withLink(planLink)
                                         .withVariables(planVariables).build());

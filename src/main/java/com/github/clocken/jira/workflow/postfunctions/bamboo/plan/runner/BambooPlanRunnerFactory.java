@@ -16,6 +16,7 @@
 
 package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner;
 
+import com.atlassian.applinks.api.ApplicationId;
 import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
@@ -29,6 +30,7 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.BambooRestApi;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.Plan;
 import com.opensymphony.workflow.loader.AbstractDescriptor;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import webwork.action.ActionContext;
 
 import javax.inject.Inject;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,11 +51,13 @@ import java.util.Map;
  */
 public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory implements WorkflowPluginFunctionFactory {
 
-    public static final String FIELD_APP_LINKS = "appLinks";
-    public static final String FIELD_SELECTED_APPLINK = "selectedAppLink";
-    public static final String FIELD_PLANS = "plans";
-    public static final String FIELD_SELECTED_PLAN = "selectedPlan";
+    public static final String FIELD_APPLINKS = "applinks";
+    public static final String FIELD_SELECTED_APPLINK = "selected_applink";
+    public static final String FIELD_PLANS_BY_APPLINK = "plans_by_applink";
+    public static final String FIELD_SELECTED_PLAN_FOR = "selected_plan_for_";
     public static final String FIELD_FIELDS = "fields";
+    public static final String FIELD_SELECTED_FIELDS_BY_VARIABLE = "selected_fields_by_variable";
+    public static final String FIELD_VARIABLES_TO_USE = "variables_to_use";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
 
@@ -60,6 +65,8 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private final FieldManager fieldManager;
     private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
+
+    private final Map<ApplicationId, List<Plan>> plansByApplink = new HashMap<>();
 
     @Inject
     public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
@@ -76,15 +83,18 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     protected void getVelocityParamsForInput(Map<String, Object> velocityParams) {
         Map<String, String[]> myParams = ActionContext.getParameters();
 
-        Iterable<ReadOnlyApplicationLink> bambooAppLinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
-        velocityParams.put(FIELD_APP_LINKS, bambooAppLinks);
+        // TODO: Order the applinks
+        Iterable<ReadOnlyApplicationLink> bambooApplinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
+        velocityParams.put(FIELD_APPLINKS, bambooApplinks);
 
-        bambooAppLinks.forEach(bambooAppLink -> {
+        // TODO: The ApplicationId might change... How to deal with that?
+        bambooApplinks.forEach(bambooApplink -> {
             try {
-                velocityParams.put(FIELD_PLANS, bambooRestApi.plans(bambooAppLink));
-            } catch (CredentialsRequiredException | ResponseException ex) {
-                LOG.error("Error while fetching Bamboo plans: {}", ex.getMessage());
-                LOG.error("Exception: ", ex);
+                plansByApplink.put(bambooApplink.getId(), bambooRestApi.plans(bambooApplink));
+                velocityParams.put(FIELD_PLANS_BY_APPLINK, plansByApplink);
+            } catch (CredentialsRequiredException | ResponseException e) {
+                LOG.error("Error while fetching Bamboo plans: {}", e.getMessage());
+                LOG.error("Exception: ", e);
             }
         });
 
@@ -99,7 +109,8 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
             velocityParams.put(FIELD_FIELDS, fields);
         } catch (FieldException e) {
-            e.printStackTrace();
+            LOG.error("Could not fetch fields: {}", e.getMessage());
+            LOG.error("Exception: ", e);
         }
     }
 
@@ -117,24 +128,72 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
         FunctionDescriptor functionDescriptor = (FunctionDescriptor) descriptor;
 
-        String selectedAppLink = (String) functionDescriptor.getArgs().get(FIELD_SELECTED_APPLINK);
-        LOG.warn("Selected AppLink is: {}", selectedAppLink);
-        velocityParams.put(FIELD_SELECTED_APPLINK, selectedAppLink);
+        String selectedApplink = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_SELECTED_APPLINK));
+        LOG.warn("Selected Applink is: {}", selectedApplink);
+        velocityParams.put(FIELD_SELECTED_APPLINK, selectedApplink);
 
-        String selectedPlan = (String) functionDescriptor.getArgs().get(FIELD_SELECTED_PLAN);
-        LOG.warn("Selected Plan is {}", selectedPlan);
-        velocityParams.put(FIELD_SELECTED_PLAN, selectedPlan);
+        String selectedPlanForApplink = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_SELECTED_PLAN_FOR + selectedApplink));
+        LOG.warn("Selected Plan is {}", selectedPlanForApplink);
+        velocityParams.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
+
+        Map<String, String> selectedFieldsByVariable = new HashMap<>();
+        String selectedFieldsDescriptorParam = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_SELECTED_FIELDS_BY_VARIABLE));
+        for (String selectedFieldByVariable :
+                selectedFieldsDescriptorParam
+                        .replace("{", "")
+                        .replace("}", "")
+                        .replace(" ", "")
+                        .split(",")) {
+            if (StringUtils.isNotEmpty(selectedFieldByVariable)) {
+                selectedFieldsByVariable.put(selectedFieldByVariable.split("=")[0], selectedFieldByVariable.split("=")[1]);
+            }
+        }
+        LOG.warn("Selected fields by variable {}", selectedFieldsByVariable);
+        velocityParams.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByVariable);
+
+        List<String> variablesToUse = new ArrayList<>();
+        String variablesToUseDescriptorParam = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_VARIABLES_TO_USE));
+        for (String variableToUse :
+                variablesToUseDescriptorParam
+                        .replace("[", "")
+                        .replace("]", "")
+                        .replace(" ", "")
+                        .split(",")) {
+            if (StringUtils.isNotEmpty(variableToUse)) {
+                variablesToUse.add(variableToUse);
+            }
+        }
+        LOG.warn("Variables to use {}", variablesToUse);
+        velocityParams.put(FIELD_VARIABLES_TO_USE, variablesToUse);
     }
 
 
     public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {
         Map params = new HashMap();
 
-        String selectedAppLink = extractSingleParam(formParams, FIELD_SELECTED_APPLINK);
-        params.put(FIELD_SELECTED_APPLINK, selectedAppLink);
+        String selectedApplink = extractSingleParam(formParams, FIELD_SELECTED_APPLINK);
+        params.put(FIELD_SELECTED_APPLINK, selectedApplink);
 
-        String selectedPlan = extractSingleParam(formParams, FIELD_SELECTED_PLAN);
-        params.put(FIELD_SELECTED_PLAN, selectedPlan);
+        String selectedPlanForApplink = extractSingleParam(formParams, FIELD_SELECTED_PLAN_FOR + selectedApplink);
+        params.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
+
+        List<String> variablesToUse = new ArrayList<>();
+        Map<String, String> selectedFieldsByVariable = new HashMap<>();
+        plansByApplink.get(new ApplicationId(selectedApplink)).forEach(plan -> {
+            plan.getVariables().forEach(variable -> {
+                String useVariableForPlan = MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                if (formParams.containsKey(useVariableForPlan)) {
+                    String selectedFieldVorVariable = MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                    LOG.warn("Selected field for variable {} is {}", selectedFieldVorVariable,
+                            extractSingleParam(formParams, selectedFieldVorVariable));
+                    variablesToUse.add(useVariableForPlan);
+                    selectedFieldsByVariable.put(selectedFieldVorVariable,
+                            extractSingleParam(formParams, selectedFieldVorVariable));
+                }
+            });
+        });
+        params.put(FIELD_VARIABLES_TO_USE, variablesToUse);
+        params.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByVariable);
 
         return params;
     }

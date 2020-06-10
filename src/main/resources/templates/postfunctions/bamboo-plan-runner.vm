@@ -1,4 +1,4 @@
-Selected the AppLink '$selectedAppLink' and plan '$selectedPlan'
+Runs the configured Bamboo plan.
 #*
  * Copyright 2020 clocken
  *
