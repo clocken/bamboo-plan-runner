@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api;
+package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api;
 
 import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;

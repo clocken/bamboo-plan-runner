@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.impl;
+package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.impl;
 
 import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
@@ -23,8 +23,8 @@ import com.atlassian.jira.util.json.JSONException;
 import com.atlassian.jira.util.json.JSONObject;
 import com.atlassian.sal.api.net.Request;
 import com.atlassian.sal.api.net.ResponseException;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.BambooRestApi;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.Plan;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Plan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.Plan.Builder.aPlan;
+import static com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Plan.Builder.aPlan;
 
 // TODO: Use Jackson for JSON mapping?
 @Named

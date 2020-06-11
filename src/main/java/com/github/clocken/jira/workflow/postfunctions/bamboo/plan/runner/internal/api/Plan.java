@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api;
+package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api;
 
 import org.apache.commons.lang3.StringUtils;
 
