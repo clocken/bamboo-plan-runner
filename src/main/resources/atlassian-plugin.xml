@@ -18,6 +18,8 @@
     <web-resource key="bamboo-plan-runner-resources"
                   name="bamboo-plan-runner Web Resources">
         <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-forms</dependency>
+        <dependency>com.atlassian.auiplugin:aui-table</dependency>
         <resource type="download"
                   name="images/"
                   location="/images"/>

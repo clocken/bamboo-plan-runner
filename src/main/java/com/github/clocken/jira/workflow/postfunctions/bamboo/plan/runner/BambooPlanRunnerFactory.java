@@ -180,17 +180,19 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         List<String> variablesToUse = new ArrayList<>();
         Map<String, String> selectedFieldsByVariable = new HashMap<>();
         plansByApplink.get(new ApplicationId(selectedApplink)).forEach(plan -> {
-            plan.getVariables().forEach(variable -> {
-                String useVariableForPlan = MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                if (formParams.containsKey(useVariableForPlan)) {
-                    String selectedFieldVorVariable = MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                    LOG.warn("Selected field for variable {} is {}", selectedFieldVorVariable,
-                            extractSingleParam(formParams, selectedFieldVorVariable));
-                    variablesToUse.add(useVariableForPlan);
-                    selectedFieldsByVariable.put(selectedFieldVorVariable,
-                            extractSingleParam(formParams, selectedFieldVorVariable));
-                }
-            });
+            if (selectedPlanForApplink.endsWith(plan.getKey())) {
+                plan.getVariables().forEach(variable -> {
+                    String useVariableForPlan = MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                    if (formParams.containsKey(useVariableForPlan)) {
+                        String selectedFieldVorVariable = MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                        LOG.warn("Selected field for variable {} is {}", selectedFieldVorVariable,
+                                extractSingleParam(formParams, selectedFieldVorVariable));
+                        variablesToUse.add(useVariableForPlan);
+                        selectedFieldsByVariable.put(selectedFieldVorVariable,
+                                extractSingleParam(formParams, selectedFieldVorVariable));
+                    }
+                });
+            }
         });
         params.put(FIELD_VARIABLES_TO_USE, variablesToUse);
         params.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByVariable);

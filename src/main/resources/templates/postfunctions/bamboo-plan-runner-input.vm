@@ -14,99 +14,134 @@
  * limitations under the License.
 *#
 
+#set( $selected_plan_for_applink_var = "$selected_plan_for_${selected_applink}" )
+#set( $selected_plan_for_applink = "#evaluate( $selected_plan_for_applink_var )" )
+
 <script type="text/javascript">
 // <![CDATA[
-    function disableByAppLink(appLink) {
-        alert(AJS.$("#selected_plan_for_" + appLink + "_id").val());
+    // Enable AUI in the editing form
+    AJS.toInit( function() {
+        if( AJS.$( "form[action='AddWorkflowTransitionFunctionParams.jspa']" ).length === 1 ) {
+            // We're adding a new PostFunction, so make a default selection
+            AJS.$( "form[action='AddWorkflowTransitionFunctionParams.jspa']" ).addClass( "aui" );
+            defaultApplink = "$applinks.iterator().next().id";
+            defaultPlan = "$plans_by_applink.values().iterator().next().iterator().next().key";
+            togglePlanSelectionForApplink( defaultApplink );
+            toggleVariableSelectionForPlan( defaultApplink + "_" + defaultPlan );
+        } else {
+            // We're editing a PostFunction
+            AJS.$( "form[action='EditWorkflowTransitionPostFunctionParams.jspa']" ).addClass( "aui" );
+            togglePlanSelectionForApplink( "$selected_applink" );
+            toggleVariableSelectionForPlan( "$selected_plan_for_applink" );
+        }
+    } );
+
+    function togglePlanSelectionForApplink( applink ) {
+        AJS.$( "[id*='plan_selection_for_']" ).not( "#plan_selection_for_" + applink ).addClass( "hidden" );
+        AJS.$( "#plan_selection_for_" + applink ).removeClass( "hidden" );
+        toggleVariableSelectionForPlan( AJS.$( "#selected_plan_for_" + applink ).val() );
+    }
+
+    function toggleVariableSelectionForPlan( plan ) {
+        AJS.$( "[id*='variable_selection_for_']" ).not( "#variable_selection_for_" + plan ).addClass( "hidden" );
+        AJS.$( "#variable_selection_for_" + plan ).removeClass( "hidden" );
     }
 // ]]>
 </script>
 
 <tr>
-    <td class="fieldLabelArea">
-        $i18n.getText("bamboo-plan-runner.postfunction.label.applink")
-    </td>
-    <td nowrap>
-        <select id="selected_applink_id"
-                name="selected_applink"
-                onchange="disableByAppLink(this.value)">
-            <option value="TEST">TEST</option>
-        #foreach( $applink in $applinks )
-            <option value="$applink.id"
-            #if( $applink.id.equals($selected_applink) )
-                    selected
+    <td>
+        <div class="field-group">
+            <label for="selected_applink">$i18n.getText("bamboo-plan-runner.postfunction.label.applink")</label>
+            <!-- TODO: What about aui-select? Cannot get it to work, yet -->
+            <select class="select"
+                    id="selected_applink"
+                    name="selected_applink"
+                    onchange="togglePlanSelectionForApplink(this.value)">
+            #foreach( $applink in $applinks )
+                <option value="$applink.id"
+                #if( $applink.id.equals($selected_applink) )
+                        selected
+                #end
+                >$applink.name</option>
             #end
-            >$applink.name</option>
-        #end
-        </select>
+            </select>
+        </div>
     </td>
 </tr>
 
 #foreach( $applink in $applinks )
-    <tr>
-        <td class="fieldLabelArea">
-            $i18n.getText("bamboo-plan-runner.postfunction.label.plan")
-        </td>
-        <td nowrap>
-            <select id="selected_plan_for_${applink.id}_id"
-                    name="selected_plan_for_${applink.id}">
-            #foreach( $plan in $plans_by_applink.get($applink.id) )
-                <option value="${applink.id}_${plan.key}"
-                #if( !$plan.enabled )
-                        title="$i18n.getText('bamboo-plan-runner.postfunction.title.plan.disabled')"
-                        disabled
+    <tr id="plan_selection_for_${applink.id}">
+        <td>
+            <div class="field-group">
+                <label for="selected_plan_for_${applink.id}">$i18n.getText("bamboo-plan-runner.postfunction.label.plan")</label>
+                <select class="select"
+                        id="selected_plan_for_${applink.id}"
+                        name="selected_plan_for_${applink.id}"
+                        onchange="toggleVariableSelectionForPlan(this.value)">
+                #foreach( $plan in $plans_by_applink.get($applink.id) )
+                    <option value="${applink.id}_${plan.key}"
+                    #if( !$plan.enabled )
+                            title="$i18n.getText('bamboo-plan-runner.postfunction.title.plan.disabled')"
+                            disabled
+                    #end
+                    #if( "${applink.id}_${plan.key}" == "$selected_plan_for_applink" )
+                            selected
+                    #end
+                    >$plan.name - $plan.key</option>
                 #end
-                #set( $selected_plan_for_applink_var = "$selected_plan_for_${applink.id}" )
-                #set( $selected_plan_for_applink = "#evaluate( $selected_plan_for_applink_var )" )
-                #if( "${applink.id}_${plan.key}" == "$selected_plan_for_applink" )
-                        selected
-                #end
-                >$plan.name - $plan.key</option>
-            #end
-            </select>
+                </select>
+            </div>
         </td>
     </tr>
 
     #foreach( $plan in $plans_by_applink.get($applink.id) )
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
-                    </th>
-                    <th>
-                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
-                    </th>
-                <tr>
-            <thead>
-            <tbody>
-            #foreach( $variable in $plan.variables )
-                <tr>
-                    <td>
-                        <label>
-                            <input type="checkbox" 
-                                   name="use_${applink.id}_${plan.key}_${variable}"
-                            #if( $variables_to_use.contains("use_${applink.id}_${plan.key}_${variable}") )
-                                checked
-                            #end />
-                            $variable
-                        </label>
-                    </td>
-                    <td>
-                        <select id="selected_field_for_${applink.id}_${plan.key}_${variable}_id"
-                                name="selected_field_for_${applink.id}_${plan.key}_${variable}">
-                        #foreach( $field in $fields )
-                            <option value="$field.id"
-                            #if( $field.id.equals($selected_fields_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}")) )
-                                    selected
-                            #end
-                            >$i18n.getText($field.nameKey)</option>
-                        #end
-                        </select>
-                    </td>
-                </tr>
-            #end
-            </tbody>
-        </table>
+        <tr id="variable_selection_for_${applink.id}_${plan.key}">
+            <td>
+                <table class="aui aui-table-list">
+                    <thead>
+                        <tr>
+                            <th>
+                                $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
+                            </th>
+                            <th>
+                                $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
+                            </th>
+                        <tr>
+                    <thead>
+                    <tbody>
+                    #foreach( $variable in $plan.variables )
+                        <tr>
+                            <td>
+                                <div class="checkbox">
+                                    <input  class="checkbox"
+                                            type="checkbox"
+                                            id="use_${applink.id}_${plan.key}_${variable}"
+                                            name="use_${applink.id}_${plan.key}_${variable}"
+                                    #if( $variables_to_use.contains("use_${applink.id}_${plan.key}_${variable}") )
+                                        checked
+                                    #end />
+                                    <label for="use_${applink.id}_${plan.key}_${variable}">$variable</label>
+                                </div>
+                            </td>
+                            <td>
+                                <select class="select"
+                                        id="selected_field_for_${applink.id}_${plan.key}_${variable}"
+                                        name="selected_field_for_${applink.id}_${plan.key}_${variable}">
+                                #foreach( $field in $fields )
+                                    <option value="$field.id"
+                                    #if( $field.id.equals($selected_fields_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}")) )
+                                            selected
+                                    #end
+                                    >$i18n.getText($field.nameKey)</option>
+                                #end
+                                </select>
+                            </td>
+                        </tr>
+                    #end
+                    </tbody>
+                </table>
+            </td>
+        </tr>
     #end
 #end
