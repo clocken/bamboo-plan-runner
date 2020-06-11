@@ -38,7 +38,4 @@ public interface BambooRestApi {
      */
     @NotNull
     List<Plan> plans(ReadOnlyApplicationLink bambooAppLink) throws CredentialsRequiredException, ResponseException;
-
-    @NotNull
-    List<Plan> plans(String bambooBaseUrl);
 }

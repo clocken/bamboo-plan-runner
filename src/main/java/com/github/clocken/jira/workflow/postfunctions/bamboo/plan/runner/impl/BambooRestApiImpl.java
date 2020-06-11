@@ -129,9 +129,4 @@ public final class BambooRestApiImpl implements BambooRestApi {
 
         return Collections.unmodifiableList(plans);
     }
-
-    @Override
-    public List<Plan> plans(String bambooBaseUrl) {
-        return Collections.emptyList();
-    }
 }

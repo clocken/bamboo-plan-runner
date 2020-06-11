@@ -93,6 +93,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
                 plansByApplink.put(bambooApplink.getId(), bambooRestApi.plans(bambooApplink));
                 velocityParams.put(FIELD_PLANS_BY_APPLINK, plansByApplink);
             } catch (CredentialsRequiredException | ResponseException e) {
+                // TODO: implement user feedback for this
                 LOG.error("Error while fetching Bamboo plans: {}", e.getMessage());
                 LOG.error("Exception: ", e);
             }
@@ -109,6 +110,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
             velocityParams.put(FIELD_FIELDS, fields);
         } catch (FieldException e) {
+            // TODO: implement user feedback for this
             LOG.error("Could not fetch fields: {}", e.getMessage());
             LOG.error("Exception: ", e);
         }
