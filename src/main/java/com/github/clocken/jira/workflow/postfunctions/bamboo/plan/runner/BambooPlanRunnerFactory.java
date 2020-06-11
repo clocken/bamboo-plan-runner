@@ -29,21 +29,18 @@ import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.BambooRestApi;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.api.Plan;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FunctionDescriptorUtils;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Plan;
 import com.opensymphony.workflow.loader.AbstractDescriptor;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import webwork.action.ActionContext;
 
 import javax.inject.Inject;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This is the factory class responsible for dealing with the UI for the post-function.
@@ -65,6 +62,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private final FieldManager fieldManager;
     private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
+    private final FunctionDescriptorUtils functionDescriptorUtils;
 
     private final Map<ApplicationId, List<Plan>> plansByApplink = new HashMap<>();
 
@@ -72,22 +70,22 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
                                    @ComponentImport FieldManager fieldManager,
                                    @ComponentImport I18nHelper i18nHelper,
-                                   BambooRestApi bambooRestApi) {
+                                   BambooRestApi bambooRestApi,
+                                   FunctionDescriptorUtils functionDescriptorUtils) {
         this.applicationLinkService = applicationLinkService;
         this.fieldManager = fieldManager;
         this.i18nHelper = i18nHelper;
         this.bambooRestApi = bambooRestApi;
+        this.functionDescriptorUtils = functionDescriptorUtils;
     }
 
     @Override
     protected void getVelocityParamsForInput(Map<String, Object> velocityParams) {
-        Map<String, String[]> myParams = ActionContext.getParameters();
-
         // TODO: Order the applinks
         Iterable<ReadOnlyApplicationLink> bambooApplinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
         velocityParams.put(FIELD_APPLINKS, bambooApplinks);
 
-        // TODO: The ApplicationId might change... How to deal with that?
+        // TODO: The ApplicationId might change... When does that happen and how to deal with that?
         bambooApplinks.forEach(bambooApplink -> {
             try {
                 plansByApplink.put(bambooApplink.getId(), bambooRestApi.plans(bambooApplink));
@@ -100,15 +98,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         });
 
         try {
-            List<Field> fields = new ArrayList<>();
-            fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
-                if (!navigableField.getName().startsWith("?")) {
-                    fields.add(navigableField);
-                }
-            });
-            fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()), i18nHelper.getText(field2.getNameKey())));
-
-            velocityParams.put(FIELD_FIELDS, fields);
+            velocityParams.put(FIELD_FIELDS, getAllJiraFields());
         } catch (FieldException e) {
             // TODO: implement user feedback for this
             LOG.error("Could not fetch fields: {}", e.getMessage());
@@ -127,48 +117,26 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         if (!(descriptor instanceof FunctionDescriptor)) {
             throw new IllegalArgumentException("Descriptor must be a FunctionDescriptor.");
         }
-
         FunctionDescriptor functionDescriptor = (FunctionDescriptor) descriptor;
 
         String selectedApplink = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_SELECTED_APPLINK));
-        LOG.warn("Selected Applink is: {}", selectedApplink);
         velocityParams.put(FIELD_SELECTED_APPLINK, selectedApplink);
+        LOG.debug("Selected Applink is: {}", selectedApplink);
 
         String selectedPlanForApplink = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_SELECTED_PLAN_FOR + selectedApplink));
-        LOG.warn("Selected Plan is {}", selectedPlanForApplink);
         velocityParams.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
+        LOG.debug("Selected Plan is {}", selectedPlanForApplink);
 
-        Map<String, String> selectedFieldsByVariable = new HashMap<>();
-        String selectedFieldsDescriptorParam = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_SELECTED_FIELDS_BY_VARIABLE));
-        for (String selectedFieldByVariable :
-                selectedFieldsDescriptorParam
-                        .replace("{", "")
-                        .replace("}", "")
-                        .replace(" ", "")
-                        .split(",")) {
-            if (StringUtils.isNotEmpty(selectedFieldByVariable)) {
-                selectedFieldsByVariable.put(selectedFieldByVariable.split("=")[0], selectedFieldByVariable.split("=")[1]);
-            }
-        }
-        LOG.warn("Selected fields by variable {}", selectedFieldsByVariable);
-        velocityParams.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByVariable);
+        velocityParams.put(FIELD_SELECTED_FIELDS_BY_VARIABLE,
+                functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_FIELDS_BY_VARIABLE));
+        LOG.debug("Selected fields by variable {}",
+                functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_FIELDS_BY_VARIABLE));
 
-        List<String> variablesToUse = new ArrayList<>();
-        String variablesToUseDescriptorParam = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(FIELD_VARIABLES_TO_USE));
-        for (String variableToUse :
-                variablesToUseDescriptorParam
-                        .replace("[", "")
-                        .replace("]", "")
-                        .replace(" ", "")
-                        .split(",")) {
-            if (StringUtils.isNotEmpty(variableToUse)) {
-                variablesToUse.add(variableToUse);
-            }
-        }
-        LOG.warn("Variables to use {}", variablesToUse);
-        velocityParams.put(FIELD_VARIABLES_TO_USE, variablesToUse);
+        velocityParams.put(FIELD_VARIABLES_TO_USE,
+                functionDescriptorUtils.parseListFromFunctionDescriptor(functionDescriptor, FIELD_VARIABLES_TO_USE));
+        LOG.debug("Variables to use {}",
+                functionDescriptorUtils.parseListFromFunctionDescriptor(functionDescriptor, FIELD_VARIABLES_TO_USE));
     }
-
 
     public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {
         Map params = new HashMap();
@@ -184,14 +152,16 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         plansByApplink.get(new ApplicationId(selectedApplink)).forEach(plan -> {
             if (selectedPlanForApplink.endsWith(plan.getKey())) {
                 plan.getVariables().forEach(variable -> {
-                    String useVariableForPlan = MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                    if (formParams.containsKey(useVariableForPlan)) {
-                        String selectedFieldVorVariable = MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                        LOG.warn("Selected field for variable {} is {}", selectedFieldVorVariable,
-                                extractSingleParam(formParams, selectedFieldVorVariable));
-                        variablesToUse.add(useVariableForPlan);
-                        selectedFieldsByVariable.put(selectedFieldVorVariable,
-                                extractSingleParam(formParams, selectedFieldVorVariable));
+                    String useVariableForPlanKey =
+                            MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                    if (formParams.containsKey(useVariableForPlanKey)) {
+                        String selectedFieldVorVariableKey =
+                                MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                        variablesToUse.add(useVariableForPlanKey);
+                        selectedFieldsByVariable.put(selectedFieldVorVariableKey,
+                                extractSingleParam(formParams, selectedFieldVorVariableKey));
+                        LOG.debug("Using variable {} with field {}", selectedFieldVorVariableKey,
+                                extractSingleParam(formParams, selectedFieldVorVariableKey));
                     }
                 });
             }
@@ -202,4 +172,15 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         return params;
     }
 
+    private List<Field> getAllJiraFields() throws FieldException {
+        List<Field> fields = new ArrayList<>();
+        fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
+            if (!navigableField.getName().startsWith("?")) {
+                fields.add(navigableField);
+            }
+        });
+        fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()),
+                i18nHelper.getText(field2.getNameKey())));
+        return Collections.unmodifiableList(fields);
+    }
 }

@@ -25,12 +25,11 @@ import com.atlassian.sal.api.net.Request;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Plan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,92 +40,91 @@ import static com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.
 @Named
 public final class BambooRestApiImpl implements BambooRestApi {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BambooRestApiImpl.class);
-
-    private static final String REST_API_BASE_URL = "/rest/api/latest";
-    private static final String PLAN_API_URL = REST_API_BASE_URL + "/plan";
+    private static final String REST_API_BASE = "/rest/api/latest";
+    private static final String PLAN_API = REST_API_BASE + "/plan";
     private static final String PLAN_API_VARIABLE_QUERY_PARAMETER = "expand=variableContext";
 
     private static final String HTTP_HEADER_APPLICATION_JSON = "application/json";
 
+    // TODO: Does this work with every user? Possibly not! And what about those Access tokens?
     @Override
-    public List<Plan> plans(ReadOnlyApplicationLink bambooAppLink) throws CredentialsRequiredException, ResponseException {
+    public List<Plan> plans(ReadOnlyApplicationLink bambooApplink) throws ResponseException, CredentialsRequiredException {
+        return getPlans(bambooApplink);
+    }
+
+    private List<Plan> getPlans(ReadOnlyApplicationLink bambooApplink) throws ResponseException, CredentialsRequiredException {
         final List<Plan> plans = new ArrayList<>();
-        final List<URL> planLinks = new ArrayList<>();
-
-        try {
-            // TODO: Does this work with every user? Possibly not! And what about those Access tokens?
-            bambooAppLink.createAuthenticatedRequestFactory()
-                    .createRequest(Request.MethodType.GET, PLAN_API_URL)
+        for (URL planLink : getPlanLinks(bambooApplink)) {
+            bambooApplink.createAuthenticatedRequestFactory()
+                    .createRequest(Request.MethodType.GET, planLink.getPath() + '?' + PLAN_API_VARIABLE_QUERY_PARAMETER)
                     .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
-                    .execute(
-                            response -> {
-                                if (!response.isSuccessful()) {
-                                    LOG.error("Request for {} was unsuccessful. Status code is {}", PLAN_API_URL, response.getStatusCode());
-                                    return;
-                                }
+                    .execute(response -> {
+                        if (!response.isSuccessful()) {
+                            throw new ResponseException(
+                                    MessageFormat.format("Request for {0} was unsuccessful. Status code is {1}",
+                                            planLink.getPath() + PLAN_API_VARIABLE_QUERY_PARAMETER,
+                                            response.getStatusCode()));
+                        }
+                        try {
+                            JSONObject jsonResponse = new JSONObject(response.getResponseBodyAsString());
+                            JSONArray jsonPlanVariables = jsonResponse
+                                    .getJSONObject("variableContext")
+                                    .getJSONArray("variable");
 
-                                try {
-                                    JSONObject jsonResponse = new JSONObject(response.getResponseBodyAsString());
-                                    JSONArray jsonPlans = jsonResponse
-                                            .getJSONObject("plans")
-                                            .getJSONArray("plan");
-
-                                    for (int i = 0; i < jsonPlans.length(); i++) {
-                                        JSONObject jsonPlan = jsonPlans.getJSONObject(i);
-                                        planLinks.add(new URL(jsonPlan
-                                                .getJSONObject("link")
-                                                .getString("href")));
-                                    }
-                                } catch (JSONException | MalformedURLException e) {
-                                    LOG.error("Error parsing response: {}", e.getMessage());
-                                    LOG.error("Exception: ", e);
-                                }
-                            });
-
-            for (URL planLink : planLinks) {
-                bambooAppLink.createAuthenticatedRequestFactory()
-                        .createRequest(Request.MethodType.GET, planLink.getPath() + '?' + PLAN_API_VARIABLE_QUERY_PARAMETER)
-                        .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
-                        .execute(response -> {
-                            if (!response.isSuccessful()) {
-                                LOG.error("Request for {} was unsuccessful. Status code is {}", planLink.getPath() + PLAN_API_VARIABLE_QUERY_PARAMETER, response.getStatusCode());
-                                return;
+                            List<String> planVariables = new ArrayList<>();
+                            for (int i = 0; i < jsonPlanVariables.length(); i++) {
+                                JSONObject jsonPlanVariable = jsonPlanVariables.getJSONObject(i);
+                                planVariables.add(jsonPlanVariable.getString("key"));
                             }
 
+                            plans.add(aPlan()
+                                    .withKey(jsonResponse.getString("key"))
+                                    .withName(jsonResponse.getString("shortName"))
+                                    .thatIsEnabled(jsonResponse.getBoolean("enabled"))
+                                    // TODO: Handle optional description
+                                    .withLink(planLink)
+                                    .withVariables(planVariables).build());
+                        } catch (JSONException e) {
+                            throw new ResponseException(
+                                    MessageFormat.format("Error parsing response from {0}", planLink),
+                                    e);
+                        }
+                    });
+        }
+        return Collections.unmodifiableList(plans);
+    }
+
+    private List<URL> getPlanLinks(ReadOnlyApplicationLink bambooApplink) throws ResponseException, CredentialsRequiredException {
+        List<URL> planLinks = new ArrayList<>();
+        bambooApplink.createAuthenticatedRequestFactory()
+                .createRequest(Request.MethodType.GET, PLAN_API)
+                .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
+                .execute(
+                        response -> {
+                            if (!response.isSuccessful()) {
+                                throw new ResponseException(
+                                        MessageFormat.format("Request for {0} was unsuccessful. Status code is {1}",
+                                                PLAN_API,
+                                                response.getStatusCode()));
+                            }
                             try {
-                                List<String> planVariables = new ArrayList<>();
                                 JSONObject jsonResponse = new JSONObject(response.getResponseBodyAsString());
-                                JSONArray jsonPlanVariables = jsonResponse
-                                        .getJSONObject("variableContext")
-                                        .getJSONArray("variable");
+                                JSONArray jsonPlans = jsonResponse
+                                        .getJSONObject("plans")
+                                        .getJSONArray("plan");
 
-                                for (int i = 0; i < jsonPlanVariables.length(); i++) {
-                                    JSONObject jsonPlanVariable = jsonPlanVariables.getJSONObject(i);
-                                    planVariables.add(jsonPlanVariable.getString("key"));
+                                for (int i = 0; i < jsonPlans.length(); i++) {
+                                    JSONObject jsonPlan = jsonPlans.getJSONObject(i);
+                                    planLinks.add(new URL(jsonPlan
+                                            .getJSONObject("link")
+                                            .getString("href")));
                                 }
-
-                                plans.add(aPlan()
-                                        .withKey(jsonResponse.getString("key"))
-                                        .withName(jsonResponse.getString("shortName"))
-                                        .thatIsEnabled(jsonResponse.getBoolean("enabled"))
-                                        // TODO: Handle optional description
-                                        .withLink(planLink)
-                                        .withVariables(planVariables).build());
-                            } catch (JSONException e) {
-                                LOG.error("Error parsing response: {}", e.getMessage());
-                                LOG.error("Exception: ", e);
+                            } catch (JSONException | MalformedURLException e) {
+                                throw new ResponseException(
+                                        MessageFormat.format("Error parsing response from {0}", PLAN_API),
+                                        e);
                             }
                         });
-            }
-        } catch (CredentialsRequiredException ex) {
-            LOG.error("No credentials stored for the context user. Bamboo plans cannot be fetched.");
-            throw ex;
-        } catch (ResponseException ex) {
-            LOG.error("Request for {} was unsuccessful.", PLAN_API_URL);
-            throw ex;
-        }
-
-        return Collections.unmodifiableList(plans);
+        return Collections.unmodifiableList(planLinks);
     }
 }
