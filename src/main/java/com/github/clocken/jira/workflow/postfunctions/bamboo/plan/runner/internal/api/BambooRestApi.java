@@ -22,6 +22,7 @@ import com.atlassian.sal.api.net.ResponseException;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A service wrapper for selected Bamboo REST API endpoints needed by the Bamboo Plan Runner.
@@ -30,12 +31,25 @@ public interface BambooRestApi {
 
     /**
      * Fetches a list of all plans in a Bamboo instance.
+     * See also: https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e2338
      *
-     * @param bambooAppLink a {@link ReadOnlyApplicationLink} to the Bamboo instance
+     * @param bambooApplink a {@link ReadOnlyApplicationLink} to the Bamboo instance
      * @return A list of all plans in the given Bamboo instance
      * @throws CredentialsRequiredException in case authentication fails
      * @throws ResponseException            in case something went wrong during the request
      */
     @NotNull
-    List<Plan> plans(ReadOnlyApplicationLink bambooAppLink) throws CredentialsRequiredException, ResponseException;
+    List<Plan> plans(ReadOnlyApplicationLink bambooApplink) throws CredentialsRequiredException, ResponseException;
+
+    /**
+     * Enqueues a new build for the given plan on the given Bamboo instance.
+     * See also: https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e1256
+     *
+     * @param bambooApplink    a {@link ReadOnlyApplicationLink} to the Bamboo instance
+     * @param planKey          the key of the plan to build. Should be in the form of '{projectKey}-{buildKey}'
+     * @param valuesByVariable the (optional) mapping of variables with values for the plan to run
+     * @throws CredentialsRequiredException in case authentication fails
+     * @throws ResponseException            in case something went wrong during the request
+     */
+    void queueBuild(ReadOnlyApplicationLink bambooApplink, String planKey, Map<String, String> valuesByVariable) throws CredentialsRequiredException, ResponseException;
 }

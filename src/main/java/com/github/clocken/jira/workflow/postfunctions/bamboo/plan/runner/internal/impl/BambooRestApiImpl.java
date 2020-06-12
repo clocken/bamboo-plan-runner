@@ -33,6 +33,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Plan.Builder.aPlan;
 
@@ -43,14 +44,38 @@ public final class BambooRestApiImpl implements BambooRestApi {
     private static final String REST_API_BASE = "/rest/api/latest";
     private static final String PLAN_API = REST_API_BASE + "/plan";
     private static final String PLAN_API_VARIABLE_QUERY_PARAMETER = "expand=variableContext";
+    private static final String QUEUE_API = REST_API_BASE + "/queue";
 
     private static final String HTTP_HEADER_APPLICATION_JSON = "application/json";
 
     // TODO: Does this work with every user? Possibly not! And what about those Access tokens?
     @Override
-    public List<Plan> plans(ReadOnlyApplicationLink bambooApplink) throws ResponseException, CredentialsRequiredException {
+    public List<Plan> plans(ReadOnlyApplicationLink bambooApplink) throws CredentialsRequiredException, ResponseException {
         return getPlans(bambooApplink);
     }
+
+    @Override
+    public void queueBuild(ReadOnlyApplicationLink bambooApplink, String planKey, Map<String, String> valuesByVariable) throws CredentialsRequiredException, ResponseException {
+        final List<String> planVariablesWithValues = new ArrayList<>();
+        valuesByVariable.forEach((variable, value) -> {
+            planVariablesWithValues.add("bamboo.variable." + variable + "=" + value);
+        });
+
+        bambooApplink.createAuthenticatedRequestFactory()
+                .createRequest(Request.MethodType.POST, QUEUE_API + "/" + planKey)
+                .addRequestParameters(planVariablesWithValues.toArray(new String[0]))
+                .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
+                .execute(response -> {
+                    if (!response.isSuccessful()) {
+                        throw new ResponseException(
+                                MessageFormat.format("Request for {0} was unsuccessful. Status code is {1}",
+                                        QUEUE_API + "/" + planKey,
+                                        response.getStatusCode())
+                        );
+                    }
+                });
+    }
+
 
     private List<Plan> getPlans(ReadOnlyApplicationLink bambooApplink) throws ResponseException, CredentialsRequiredException {
         final List<Plan> plans = new ArrayList<>();

@@ -16,13 +16,22 @@
 
 package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner;
 
-import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.applinks.api.ApplicationId;
+import com.atlassian.applinks.api.ReadOnlyApplicationLink;
+import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
+import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.workflow.function.issue.AbstractJiraFunctionProvider;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FunctionDescriptorUtils;
 import com.opensymphony.module.propertyset.PropertySet;
 import com.opensymphony.workflow.WorkflowException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,20 +40,55 @@ import java.util.Map;
  */
 public class BambooPlanRunner extends AbstractJiraFunctionProvider {
 
-    public static final String FIELD_SELECTED_APPLINK = "selectedAppLink";
+    public static final String FIELD_SELECTED_APPLINK = "selected_applink";
+    public static final String FIELD_SELECTED_PLAN_FOR = "selected_plan_for_";
+    public static final String FIELD_SELECTED_FIELDS_BY_VARIABLE = "selected_fields_by_variable";
+    public static final String FIELD_SELECTED_FIELD_FOR = "selected_field_for_";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunner.class);
 
+    private final ReadOnlyApplicationLinkService applicationLinkService;
+    private final FieldManager fieldManager;
+    private final FunctionDescriptorUtils functionDescriptorUtils;
+
+    @Inject
+    public BambooPlanRunner(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
+                            @ComponentImport FieldManager fieldManager,
+                            FunctionDescriptorUtils functionDescriptorUtils) {
+        this.applicationLinkService = applicationLinkService;
+        this.fieldManager = fieldManager;
+        this.functionDescriptorUtils = functionDescriptorUtils;
+    }
+
     @Override
     public void execute(Map transientVars, Map args, PropertySet ps) throws WorkflowException {
-        MutableIssue issue = getIssue(transientVars);
-        String selectedAppLink = (String) args.get(FIELD_SELECTED_APPLINK);
-
-        if (null == selectedAppLink) {
-            selectedAppLink = "";
+        String selectedApplinkId = (String) args.get(FIELD_SELECTED_APPLINK);
+        if (StringUtils.isEmpty(selectedApplinkId)) {
+            LOG.error("No Application link selected. Not running any plan!");
+            return;
         }
 
-        LOG.debug("Appending '{}' to the Description of issue {}", selectedAppLink, issue.getKey());
-        issue.setDescription(issue.getDescription() + selectedAppLink);
+        String selectedPlan = StringUtils.remove(
+                (String) args.get(FIELD_SELECTED_PLAN_FOR + selectedApplinkId),
+                selectedApplinkId + "_");
+        if (StringUtils.isEmpty(selectedPlan)) {
+            LOG.error("No plan selected for the Application Link {}. Not running any plan!", selectedApplinkId);
+            return;
+        }
+
+        final Map<String, String> selectedValuesByVariable = new HashMap<>();
+        functionDescriptorUtils.createMapFromString((String) args.get(FIELD_SELECTED_FIELDS_BY_VARIABLE))
+                .forEach((variable, value) -> {
+                    selectedValuesByVariable.put(StringUtils.remove(variable,
+                            MessageFormat.format("{0}{1}_{2}_",
+                                    FIELD_SELECTED_FIELD_FOR,
+                                    selectedApplinkId,
+                                    selectedPlan)),
+                            value);
+                });
+
+        ReadOnlyApplicationLink selectedApplink = applicationLinkService.getApplicationLink(new ApplicationId(selectedApplinkId));
+//        selectedApplink.createAuthenticatedRequestFactory()
+//                .createRequest(Request.MethodType.POST, )
     }
 }
