@@ -31,16 +31,24 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
 
     @Override
     public List<String> parseListFromFunctionDescriptor(FunctionDescriptor functionDescriptor, String key) {
-        String descriptorParam = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(key));
+        String descriptorParam = (String) functionDescriptor.getArgs().get(key);
         if (StringUtils.isEmpty(descriptorParam)) {
             LOG.warn("No entry for {} found in {}", key, functionDescriptor);
             return Collections.emptyList();
         }
 
+        return Collections.unmodifiableList(createListFromString(descriptorParam));
+    }
+
+    @Override
+    public List<String> createListFromString(String list) {
+        if (StringUtils.isEmpty(list)) {
+            return Collections.emptyList();
+        }
+
         List<String> parsedList = new ArrayList<>();
         for (String listEntry :
-                descriptorParam
-                        .replace("[", "")
+                list.replace("[", "")
                         .replace("]", "")
                         .replace(" ", "")
                         .split(",")) {
@@ -48,21 +56,30 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
                 parsedList.add(listEntry);
             }
         }
+
         return Collections.unmodifiableList(parsedList);
     }
 
     @Override
     public Map<String, String> parseMapFromFunctionDescriptor(FunctionDescriptor functionDescriptor, String key) {
-        String descriptorParam = StringUtils.trimToEmpty((String) functionDescriptor.getArgs().get(key));
+        String descriptorParam = (String) functionDescriptor.getArgs().get(key);
         if (StringUtils.isEmpty(descriptorParam)) {
             LOG.warn("No entry for {} found in {}", key, functionDescriptor);
             return Collections.emptyMap();
         }
 
+        return Collections.unmodifiableMap(createMapFromString(descriptorParam));
+    }
+
+    @Override
+    public Map<String, String> createMapFromString(String map) {
+        if (StringUtils.isEmpty(map)) {
+            return Collections.emptyMap();
+        }
+
         Map<String, String> parsedMap = new HashMap<>();
         for (String mapEntry :
-                descriptorParam
-                        .replace("{", "")
+                map.replace("{", "")
                         .replace("}", "")
                         .replace(" ", "")
                         .split(",")) {
@@ -70,6 +87,7 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
                 parsedMap.put(mapEntry.split("=")[0], mapEntry.split("=")[1]);
             }
         }
+
         return Collections.unmodifiableMap(parsedMap);
     }
 }

@@ -43,8 +43,7 @@ import java.text.MessageFormat;
 import java.util.*;
 
 /**
- * This is the factory class responsible for dealing with the UI for the post-function.
- * This is typically where you put default values into the velocity context and where you store user input.
+ * The factory class responsible for dealing with the UI of the Bamboo Plan Runner.
  */
 public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory implements WorkflowPluginFunctionFactory {
 
@@ -82,10 +81,10 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     @Override
     protected void getVelocityParamsForInput(Map<String, Object> velocityParams) {
         // TODO: Order the applinks
+        // TODO: The ApplicationId might change... When does that happen and how to deal with that?
         Iterable<ReadOnlyApplicationLink> bambooApplinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
         velocityParams.put(FIELD_APPLINKS, bambooApplinks);
 
-        // TODO: The ApplicationId might change... When does that happen and how to deal with that?
         bambooApplinks.forEach(bambooApplink -> {
             try {
                 plansByApplink.put(bambooApplink.getId(), bambooRestApi.plans(bambooApplink));
@@ -101,7 +100,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
             velocityParams.put(FIELD_FIELDS, getAllJiraFields());
         } catch (FieldException e) {
             // TODO: implement user feedback for this
-            LOG.error("Could not fetch fields: {}", e.getMessage());
+            LOG.error("Error while fetching JIRA fields: {}", e.getMessage());
             LOG.error("Exception: ", e);
         }
     }
@@ -127,15 +126,13 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         velocityParams.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
         LOG.debug("Selected Plan is {}", selectedPlanForApplink);
 
-        velocityParams.put(FIELD_SELECTED_FIELDS_BY_VARIABLE,
-                functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_FIELDS_BY_VARIABLE));
-        LOG.debug("Selected fields by variable {}",
-                functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_FIELDS_BY_VARIABLE));
+        Map<String, String> selectedFieldsByValue = functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_FIELDS_BY_VARIABLE);
+        velocityParams.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByValue);
+        LOG.debug("Selected fields by variable {}", selectedFieldsByValue);
 
-        velocityParams.put(FIELD_VARIABLES_TO_USE,
-                functionDescriptorUtils.parseListFromFunctionDescriptor(functionDescriptor, FIELD_VARIABLES_TO_USE));
-        LOG.debug("Variables to use {}",
-                functionDescriptorUtils.parseListFromFunctionDescriptor(functionDescriptor, FIELD_VARIABLES_TO_USE));
+        List<String> variablesToUse = functionDescriptorUtils.parseListFromFunctionDescriptor(functionDescriptor, FIELD_VARIABLES_TO_USE);
+        velocityParams.put(FIELD_VARIABLES_TO_USE, variablesToUse);
+        LOG.debug("Variables to use {}", variablesToUse);
     }
 
     public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {

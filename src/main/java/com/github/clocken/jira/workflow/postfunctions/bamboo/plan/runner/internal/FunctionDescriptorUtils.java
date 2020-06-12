@@ -35,6 +35,14 @@ public interface FunctionDescriptorUtils {
     List<String> parseListFromFunctionDescriptor(FunctionDescriptor functionDescriptor, String key);
 
     /**
+     * Creates a {@link List} from the given string. The string should look like the result from {@link List#toString()}
+     *
+     * @param list the string to create the list from
+     * @return the (unmodifiable) {@link List}
+     */
+    List<String> createListFromString(String list);
+
+    /**
      * Reads a {@link Map} from the given {@link FunctionDescriptor}'s key
      *
      * @param functionDescriptor the {@link FunctionDescriptor} to read from
@@ -42,4 +50,12 @@ public interface FunctionDescriptorUtils {
      * @return the (unmodifiable) {@link Map}
      */
     Map<String, String> parseMapFromFunctionDescriptor(FunctionDescriptor functionDescriptor, String key);
+
+    /**
+     * Creates a {@link Map} from the given string. The string should look like the result from {@link Map#toString()}
+     *
+     * @param map the string to create the map from
+     * @return the (unmodifiable) {@link Map}
+     */
+    Map<String, String> createMapFromString(String map);
 }
