@@ -31,7 +31,7 @@ public interface BambooRestApi {
 
     /**
      * Fetches a list of all plans in a Bamboo instance.
-     * See also: https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e2338
+     * See also: <a href=https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e2338>https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e2338</a>
      *
      * @param bambooApplink a {@link ReadOnlyApplicationLink} to the Bamboo instance
      * @return A list of all plans in the given Bamboo instance
@@ -43,7 +43,7 @@ public interface BambooRestApi {
 
     /**
      * Enqueues a new build for the given plan on the given Bamboo instance.
-     * See also: https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e1256
+     * See also: <a href=https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e1256>https://docs.atlassian.com/atlassian-bamboo/REST/latest/#d2e1256</a>
      *
      * @param bambooApplink    a {@link ReadOnlyApplicationLink} to the Bamboo instance
      * @param planKey          the key of the plan to build. Should be in the form of '{projectKey}-{buildKey}'
