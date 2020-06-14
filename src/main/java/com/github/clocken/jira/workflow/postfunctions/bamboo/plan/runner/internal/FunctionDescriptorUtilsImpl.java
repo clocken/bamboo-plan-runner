@@ -84,7 +84,8 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
                         .replace(" ", "")
                         .split(",")) {
             if (StringUtils.isNotEmpty(mapEntry)) {
-                parsedMap.put(mapEntry.split("=")[0], mapEntry.split("=")[1]);
+                parsedMap.put(StringUtils.substringBefore(mapEntry, "="),
+                        StringUtils.substringAfter(mapEntry, "="));
             }
         }
 
