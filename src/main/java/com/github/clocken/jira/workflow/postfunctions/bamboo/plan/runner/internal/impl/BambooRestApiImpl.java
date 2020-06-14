@@ -58,7 +58,8 @@ public final class BambooRestApiImpl implements BambooRestApi {
     public void queueBuild(ReadOnlyApplicationLink bambooApplink, String planKey, Map<String, String> valuesByVariable) throws CredentialsRequiredException, ResponseException {
         final List<String> planVariablesWithValues = new ArrayList<>();
         valuesByVariable.forEach((variable, value) -> {
-            planVariablesWithValues.add("bamboo.variable." + variable + "=" + value);
+            planVariablesWithValues.add("bamboo.variable." + variable);
+            planVariablesWithValues.add(value);
         });
 
         bambooApplink.createAuthenticatedRequestFactory()

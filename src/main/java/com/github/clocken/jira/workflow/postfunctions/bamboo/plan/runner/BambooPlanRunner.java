@@ -17,12 +17,15 @@
 package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner;
 
 import com.atlassian.applinks.api.ApplicationId;
+import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.workflow.function.issue.AbstractJiraFunctionProvider;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FunctionDescriptorUtils;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
 import com.opensymphony.module.propertyset.PropertySet;
 import com.opensymphony.workflow.WorkflowException;
 import org.apache.commons.lang3.StringUtils;
@@ -49,14 +52,17 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
     private final FieldManager fieldManager;
+    private final BambooRestApi bambooRestApi;
     private final FunctionDescriptorUtils functionDescriptorUtils;
 
     @Inject
     public BambooPlanRunner(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
                             @ComponentImport FieldManager fieldManager,
+                            BambooRestApi bambooRestApi,
                             FunctionDescriptorUtils functionDescriptorUtils) {
         this.applicationLinkService = applicationLinkService;
         this.fieldManager = fieldManager;
+        this.bambooRestApi = bambooRestApi;
         this.functionDescriptorUtils = functionDescriptorUtils;
     }
 
@@ -88,7 +94,17 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
                 });
 
         ReadOnlyApplicationLink selectedApplink = applicationLinkService.getApplicationLink(new ApplicationId(selectedApplinkId));
-//        selectedApplink.createAuthenticatedRequestFactory()
-//                .createRequest(Request.MethodType.POST, )
+        if (selectedApplink == null) {
+            LOG.error("No Application link found for ID {}. Not running any plan!", selectedApplinkId);
+            return;
+        }
+
+        try {
+            bambooRestApi.queueBuild(selectedApplink, selectedPlan, selectedValuesByVariable);
+        } catch (CredentialsRequiredException | ResponseException e) {
+            // TODO: implement user feedback for this
+            LOG.error("Error running plan {}: {}", selectedPlan, e.getMessage());
+            LOG.error("Exception: ", e);
+        }
     }
 }
