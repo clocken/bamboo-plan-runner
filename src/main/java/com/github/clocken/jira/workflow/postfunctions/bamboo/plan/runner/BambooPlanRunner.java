@@ -45,7 +45,7 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
 
     public static final String FIELD_SELECTED_APPLINK = "selected_applink";
     public static final String FIELD_SELECTED_PLAN_FOR = "selected_plan_for_";
-    public static final String FIELD_SELECTED_FIELDS_BY_VARIABLE = "selected_fields_by_variable";
+    public static final String FIELD_SELECTED_VALUES_BY_VARIABLE = "selected_values_by_variable";
     public static final String FIELD_SELECTED_FIELD_FOR = "selected_field_for_";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunner.class);
@@ -83,7 +83,7 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
         }
 
         final Map<String, String> selectedValuesByVariable = new HashMap<>();
-        functionDescriptorUtils.createMapFromString((String) args.get(FIELD_SELECTED_FIELDS_BY_VARIABLE))
+        functionDescriptorUtils.createMapFromString((String) args.get(FIELD_SELECTED_VALUES_BY_VARIABLE))
                 .forEach((variable, value) -> {
                     selectedValuesByVariable.put(StringUtils.remove(variable,
                             MessageFormat.format("{0}{1}_{2}_",

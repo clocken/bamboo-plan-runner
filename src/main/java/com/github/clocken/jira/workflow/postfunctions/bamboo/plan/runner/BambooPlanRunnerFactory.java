@@ -52,7 +52,8 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     public static final String FIELD_PLANS_BY_APPLINK = "plans_by_applink";
     public static final String FIELD_SELECTED_PLAN_FOR = "selected_plan_for_";
     public static final String FIELD_FIELDS = "fields";
-    public static final String FIELD_SELECTED_FIELDS_BY_VARIABLE = "selected_fields_by_variable";
+    public static final String FIELD_SELECTED_VALUE_TYPES_BY_VARIABLE = "selected_value_types_by_variable";
+    public static final String FIELD_SELECTED_VALUES_BY_VARIABLE = "selected_values_by_variable";
     public static final String FIELD_VARIABLES_TO_USE = "variables_to_use";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
@@ -126,13 +127,17 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         velocityParams.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
         LOG.debug("Selected Plan is {}", selectedPlanForApplink);
 
-        Map<String, String> selectedFieldsByValue = functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_FIELDS_BY_VARIABLE);
-        velocityParams.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByValue);
-        LOG.debug("Selected fields by variable {}", selectedFieldsByValue);
-
         List<String> variablesToUse = functionDescriptorUtils.parseListFromFunctionDescriptor(functionDescriptor, FIELD_VARIABLES_TO_USE);
         velocityParams.put(FIELD_VARIABLES_TO_USE, variablesToUse);
         LOG.debug("Variables to use {}", variablesToUse);
+
+        Map<String, String> selectedValueTypesByVariable = functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_VALUE_TYPES_BY_VARIABLE);
+        velocityParams.put(FIELD_SELECTED_VALUE_TYPES_BY_VARIABLE, selectedValueTypesByVariable);
+        LOG.debug("Selected types for variables {}", selectedValueTypesByVariable);
+
+        Map<String, String> selectedValuesByVariable = functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_VALUES_BY_VARIABLE);
+        velocityParams.put(FIELD_SELECTED_VALUES_BY_VARIABLE, selectedValuesByVariable);
+        LOG.debug("Selected values for variable {}", selectedValuesByVariable);
     }
 
     public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {
@@ -145,26 +150,41 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         params.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
 
         List<String> variablesToUse = new ArrayList<>();
-        Map<String, String> selectedFieldsByVariable = new HashMap<>();
+        Map<String, String> selectedValueTypesByVariable = new HashMap<>();
+        Map<String, String> selectedValuesByVariable = new HashMap<>();
         plansByApplink.get(new ApplicationId(selectedApplink)).forEach(plan -> {
             if (selectedPlanForApplink.endsWith(plan.getKey())) {
                 plan.getVariables().forEach(variable -> {
                     String useVariableForPlanKey =
                             MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
                     if (formParams.containsKey(useVariableForPlanKey)) {
-                        String selectedFieldVorVariableKey =
-                                MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                        String variableValueTypeKey =
+                                MessageFormat.format("variable_value_type_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                        String selectedValueVorVariableKey;
+                        if (StringUtils.equals(
+                                extractSingleParam(formParams, variableValueTypeKey),
+                                MessageFormat.format("use_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable))) {
+                            selectedValueVorVariableKey =
+                                    MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                        } else {
+                            selectedValueVorVariableKey =
+                                    MessageFormat.format("custom_value_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+                        }
                         variablesToUse.add(useVariableForPlanKey);
-                        selectedFieldsByVariable.put(selectedFieldVorVariableKey,
-                                extractSingleParam(formParams, selectedFieldVorVariableKey));
-                        LOG.debug("Using variable {} with field {}", selectedFieldVorVariableKey,
-                                extractSingleParam(formParams, selectedFieldVorVariableKey));
+                        selectedValueTypesByVariable.put(variableValueTypeKey,
+                                extractSingleParam(formParams, variableValueTypeKey));
+                        selectedValuesByVariable.put(selectedValueVorVariableKey,
+                                extractSingleParam(formParams, selectedValueVorVariableKey));
+                        LOG.debug("Using variable {} with type {} and value {}", selectedValueVorVariableKey,
+                                extractSingleParam(formParams, variableValueTypeKey),
+                                extractSingleParam(formParams, selectedValueVorVariableKey));
                     }
                 });
             }
         });
         params.put(FIELD_VARIABLES_TO_USE, variablesToUse);
-        params.put(FIELD_SELECTED_FIELDS_BY_VARIABLE, selectedFieldsByVariable);
+        params.put(FIELD_SELECTED_VALUE_TYPES_BY_VARIABLE, selectedValueTypesByVariable);
+        params.put(FIELD_SELECTED_VALUES_BY_VARIABLE, selectedValuesByVariable);
 
         return params;
     }

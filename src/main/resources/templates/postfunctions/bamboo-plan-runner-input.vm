@@ -22,15 +22,15 @@
     // Enable AUI in the editing form
     AJS.toInit( function() {
         if( AJS.$( "form[action='AddWorkflowTransitionFunctionParams.jspa']" ).length === 1 ) {
-            // We're adding a new PostFunction, so make a default selection
             AJS.$( "form[action='AddWorkflowTransitionFunctionParams.jspa']" ).addClass( "aui" );
+            // We're adding a new PostFunction, so make a default selection
             defaultApplink = "$applinks.iterator().next().id";
             defaultPlan = "$plans_by_applink.values().iterator().next().iterator().next().key";
             togglePlanSelectionForApplink( defaultApplink );
             toggleVariableSelectionForPlan( defaultApplink + "_" + defaultPlan );
         } else {
-            // We're editing a PostFunction
             AJS.$( "form[action='EditWorkflowTransitionPostFunctionParams.jspa']" ).addClass( "aui" );
+            // We're editing a PostFunction
             togglePlanSelectionForApplink( "$selected_applink" );
             toggleVariableSelectionForPlan( "$selected_plan_for_applink" );
         }
@@ -45,6 +45,17 @@
     function toggleVariableSelectionForPlan( plan ) {
         AJS.$( "[id*='variable_selection_for_']" ).not( "#variable_selection_for_" + plan ).addClass( "hidden" );
         AJS.$( "#variable_selection_for_" + plan ).removeClass( "hidden" );
+    }
+
+    function toggleValueSelectionForVariableValueType( variableValueType ) {
+        variable = variableValueType.replace(/.*for_/, "");
+        if( variableValueType.search("use_field_for") != -1 ) {
+            AJS.$( "select#selected_field_for_" + variable ).removeClass( "hidden" );
+            AJS.$( "input#custom_value_for_" + variable ).addClass( "hidden" );
+        } else {
+            AJS.$( "select#selected_field_for_" + variable ).addClass( "hidden" );
+            AJS.$( "input#custom_value_for_" + variable ).removeClass( "hidden" );
+        }
     }
 // ]]>
 </script>
@@ -105,6 +116,9 @@
                                 $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
                             </th>
                             <th>
+                                $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value.type")
+                            </th>
+                            <th>
                                 $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
                             </th>
                         <tr>
@@ -125,17 +139,58 @@
                                 </div>
                             </td>
                             <td>
-                                <select class="select"
+                                <div class="radio">
+                                    <input  class="radio"
+                                            type="radio"
+                                            id="use_field_for_${applink.id}_${plan.key}_${variable}"
+                                            name="variable_value_type_for_${applink.id}_${plan.key}_${variable}"
+                                            value="use_field_for_${applink.id}_${plan.key}_${variable}"
+                                    #if( $selected_value_types_by_variable.get("variable_value_type_for_${applink.id}_${plan.key}_${variable}") == "use_field_for_${applink.id}_${plan.key}_${variable}" )
+                                            checked
+                                    #end
+                                            onchange="toggleValueSelectionForVariableValueType(this.value)" />
+                                    <label for="use_field_for_${applink.id}_${plan.key}_${variable}">
+                                        $i18n.getText("bamboo-plan-runner.postfunction.variable.value.field")</label>
+                                </div>
+                                <div class="radio">
+                                    <input  class="radio"
+                                            type="radio"
+                                            id="use_custom_value_for_${applink.id}_${plan.key}_${variable}"
+                                            name="variable_value_type_for_${applink.id}_${plan.key}_${variable}"
+                                            value="use_custom_value_for_${applink.id}_${plan.key}_${variable}"
+                                    #if( $selected_value_types_by_variable.get("variable_value_type_for_${applink.id}_${plan.key}_${variable}") == "use_custom_value_for_${applink.id}_${plan.key}_${variable}" )
+                                            checked
+                                    #end
+                                            onchange="toggleValueSelectionForVariableValueType(this.value)" />
+                                    <label for="use_custom_value_for_${applink.id}_${plan.key}_${variable}">
+                                        $i18n.getText("bamboo-plan-runner.postfunction.variable.value.custom")</label>
+                                </div>
+                            </td>
+                            <td>
+                                <select class='select
+                                #if( !$selected_values_by_variable.containsKey("selected_field_for_${applink.id}_${plan.key}_${variable}") )
+                                        hidden
+                                #end'
                                         id="selected_field_for_${applink.id}_${plan.key}_${variable}"
                                         name="selected_field_for_${applink.id}_${plan.key}_${variable}">
                                 #foreach( $field in $fields )
-                                    <option value="$field.id"
-                                    #if( $field.id.equals($selected_fields_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}")) )
+                                    <option value="$$field.id"
+                                    #if( $selected_values_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}") == "$${field.id}" )
                                             selected
                                     #end
                                     >$i18n.getText($field.nameKey)</option>
                                 #end
                                 </select>
+                                <input  class='text full-width-field
+                                #if( !$selected_values_by_variable.containsKey("custom_value_for_${applink.id}_${plan.key}_${variable}") )
+                                        hidden
+                                #end'
+                                        type="text"
+                                        id="custom_value_for_${applink.id}_${plan.key}_${variable}"
+                                        name="custom_value_for_${applink.id}_${plan.key}_${variable}"
+                                #if( $selected_values_by_variable.containsKey("custom_value_for_${applink.id}_${plan.key}_${variable}") )
+                                        value='$selected_values_by_variable.get("custom_value_for_${applink.id}_${plan.key}_${variable}")'
+                                #end />
                             </td>
                         </tr>
                     #end
