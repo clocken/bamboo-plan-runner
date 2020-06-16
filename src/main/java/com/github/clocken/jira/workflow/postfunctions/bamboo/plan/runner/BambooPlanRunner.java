@@ -28,6 +28,7 @@ import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.interna
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
 import com.opensymphony.module.propertyset.PropertySet;
 import com.opensymphony.workflow.WorkflowException;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,6 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
     public static final String FIELD_SELECTED_APPLINK = "selected_applink";
     public static final String FIELD_SELECTED_PLAN_FOR = "selected_plan_for_";
     public static final String FIELD_SELECTED_VALUES_BY_VARIABLE = "selected_values_by_variable";
-    public static final String FIELD_SELECTED_FIELD_FOR = "selected_field_for_";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunner.class);
 
@@ -85,11 +85,8 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
         final Map<String, String> selectedValuesByVariable = new HashMap<>();
         functionDescriptorUtils.createMapFromString((String) args.get(FIELD_SELECTED_VALUES_BY_VARIABLE))
                 .forEach((variable, value) -> {
-                    selectedValuesByVariable.put(StringUtils.remove(variable,
-                            MessageFormat.format("{0}{1}_{2}_",
-                                    FIELD_SELECTED_FIELD_FOR,
-                                    selectedApplinkId,
-                                    selectedPlan)),
+                    selectedValuesByVariable.put(RegExUtils.removeFirst(variable,
+                            MessageFormat.format(".*for_{0}_{1}_", selectedApplinkId, selectedPlan)),
                             value);
                 });
 
