@@ -41,6 +41,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The factory class responsible for dealing with the UI of the Bamboo Plan Runner.
@@ -57,13 +59,21 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     public static final String FIELD_VARIABLES_TO_USE = "variables_to_use";
 
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
+    private static final Pattern KEY_PREFIX_PATTERN = Pattern.compile("(.*)_for.*");
+    private static final Map<String, String> VARIABLE_VALUE_KEY_PREFIX;
+
+    static {
+        Map<String, String> tmpMap = new HashMap<>();
+        tmpMap.put("use_field", "selected_field_for");
+        tmpMap.put("use_custom_value", "custom_value_for");
+        VARIABLE_VALUE_KEY_PREFIX = Collections.unmodifiableMap(tmpMap);
+    }
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
     private final FieldManager fieldManager;
     private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
     private final FunctionDescriptorUtils functionDescriptorUtils;
-
     private final Map<ApplicationId, List<Plan>> plansByApplink = new HashMap<>();
 
     @Inject
@@ -137,7 +147,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
         Map<String, String> selectedValuesByVariable = functionDescriptorUtils.parseMapFromFunctionDescriptor(functionDescriptor, FIELD_SELECTED_VALUES_BY_VARIABLE);
         velocityParams.put(FIELD_SELECTED_VALUES_BY_VARIABLE, selectedValuesByVariable);
-        LOG.debug("Selected values for variable {}", selectedValuesByVariable);
+        LOG.debug("Selected values for variables {}", selectedValuesByVariable);
     }
 
     public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {
@@ -153,31 +163,30 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         Map<String, String> selectedValueTypesByVariable = new HashMap<>();
         Map<String, String> selectedValuesByVariable = new HashMap<>();
         plansByApplink.get(new ApplicationId(selectedApplink)).forEach(plan -> {
-            if (selectedPlanForApplink.endsWith(plan.getKey())) {
+            if (StringUtils.endsWith(selectedPlanForApplink, plan.getKey())) {
+
                 plan.getVariables().forEach(variable -> {
                     String useVariableForPlanKey =
                             MessageFormat.format("use_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
+
                     if (formParams.containsKey(useVariableForPlanKey)) {
+                        variablesToUse.add(useVariableForPlanKey);
+
                         String variableValueTypeKey =
                                 MessageFormat.format("variable_value_type_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                        String selectedValueVorVariableKey;
-                        if (StringUtils.equals(
-                                extractSingleParam(formParams, variableValueTypeKey),
-                                MessageFormat.format("use_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable))) {
-                            selectedValueVorVariableKey =
-                                    MessageFormat.format("selected_field_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                        } else {
-                            selectedValueVorVariableKey =
-                                    MessageFormat.format("custom_value_for_{0}_{1}_{2}", selectedApplink, plan.getKey(), variable);
-                        }
-                        variablesToUse.add(useVariableForPlanKey);
                         selectedValueTypesByVariable.put(variableValueTypeKey,
                                 extractSingleParam(formParams, variableValueTypeKey));
-                        selectedValuesByVariable.put(selectedValueVorVariableKey,
-                                extractSingleParam(formParams, selectedValueVorVariableKey));
-                        LOG.debug("Using variable {} with type {} and value {}", selectedValueVorVariableKey,
+
+                        String selectedValueForVariableKey =
+                                getSelectedValueForVariableKey(extractSingleParam(formParams, variableValueTypeKey), selectedApplink, plan.getKey(), variable);
+                        if (StringUtils.isNotEmpty(selectedValueForVariableKey)) {
+                            selectedValuesByVariable.put(selectedValueForVariableKey,
+                                    extractSingleParam(formParams, selectedValueForVariableKey));
+                        }
+
+                        LOG.debug("Using variable {} with type {} and value {}", useVariableForPlanKey,
                                 extractSingleParam(formParams, variableValueTypeKey),
-                                extractSingleParam(formParams, selectedValueVorVariableKey));
+                                extractSingleParam(formParams, selectedValueForVariableKey));
                     }
                 });
             }
@@ -199,5 +208,13 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()),
                 i18nHelper.getText(field2.getNameKey())));
         return Collections.unmodifiableList(fields);
+    }
+
+    private String getSelectedValueForVariableKey(String selectedValueType, String selectedApplink, String planKey, String variable) {
+        Matcher keyPrefixMatcher = KEY_PREFIX_PATTERN.matcher(selectedValueType);
+        if (keyPrefixMatcher.matches()) {
+            return MessageFormat.format("{0}_{1}_{2}_{3}", VARIABLE_VALUE_KEY_PREFIX.get(keyPrefixMatcher.group(1)), selectedApplink, planKey, variable);
+        }
+        return StringUtils.EMPTY;
     }
 }
