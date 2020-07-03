@@ -29,9 +29,9 @@ import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FunctionDescriptorUtils;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Plan;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FunctionDescriptorUtils;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan;
 import com.opensymphony.workflow.loader.AbstractDescriptor;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 import org.apache.commons.lang3.StringUtils;
@@ -151,7 +151,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     }
 
     public Map<String, ?> getDescriptorParams(Map<String, Object> formParams) {
-        Map params = new HashMap();
+        Map<String, Object> params = new HashMap<>();
 
         String selectedApplink = extractSingleParam(formParams, FIELD_SELECTED_APPLINK);
         params.put(FIELD_SELECTED_APPLINK, selectedApplink);

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal;
+package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.impl;
 
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FunctionDescriptorUtils;
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

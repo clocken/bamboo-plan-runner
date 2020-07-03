@@ -25,9 +25,9 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.workflow.function.issue.AbstractJiraFunctionProvider;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FieldStrLookup;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FunctionDescriptorUtils;
-import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FieldValueLookup;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FunctionDescriptorUtils;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
 import com.opensymphony.module.propertyset.PropertySet;
 import com.opensymphony.workflow.WorkflowException;
 import org.apache.commons.lang.text.StrSubstitutor;
@@ -85,7 +85,7 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
             return;
         }
 
-        StrSubstitutor substitutor = new StrSubstitutor(new FieldStrLookup(i18nHelper, (Issue) transientVars.get("issue")),
+        StrSubstitutor substitutor = new StrSubstitutor(new FieldValueLookup(i18nHelper, (Issue) transientVars.get("issue")),
                 "$(",
                 ")",
                 '\\');

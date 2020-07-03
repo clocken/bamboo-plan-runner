@@ -30,15 +30,15 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FieldStrLookup extends StrLookup {
+public class FieldValueLookup extends StrLookup {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FieldStrLookup.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FieldValueLookup.class);
 
     private final Issue issue;
     private final I18nHelper i18nHelper;
 
-    public FieldStrLookup(I18nHelper i18nHelper,
-                          Issue issue) {
+    public FieldValueLookup(I18nHelper i18nHelper,
+                            Issue issue) {
         this.i18nHelper = i18nHelper;
         this.issue = issue;
     }
