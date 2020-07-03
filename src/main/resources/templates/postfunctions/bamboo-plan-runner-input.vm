@@ -14,6 +14,9 @@
  * limitations under the License.
 *#
 
+#set( $dollar = '$' )
+#set( $brace_open = '(' )
+#set( $brace_close = ')' )
 #set( $selected_plan_for_applink_var = "$selected_plan_for_${selected_applink}" )
 #set( $selected_plan_for_applink = "#evaluate( $selected_plan_for_applink_var )" )
 
@@ -174,8 +177,8 @@
                                         id="selected_field_for_${applink.id}_${plan.key}_${variable}"
                                         name="selected_field_for_${applink.id}_${plan.key}_${variable}">
                                 #foreach( $field in $fields )
-                                    <option value="$$field.id"
-                                    #if( $selected_values_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}") == "$${field.id}" )
+                                    <option value="${dollar}${brace_open}${field.id}${brace_close}"
+                                    #if( $selected_values_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}") == "${dollar}${brace_open}${field.id}${brace_close}" )
                                             selected
                                     #end
                                     >$i18n.getText($field.nameKey)</option>

@@ -20,14 +20,17 @@ import com.atlassian.applinks.api.ApplicationId;
 import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
-import com.atlassian.jira.issue.fields.FieldManager;
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.workflow.function.issue.AbstractJiraFunctionProvider;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FieldStrLookup;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FunctionDescriptorUtils;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.BambooRestApi;
 import com.opensymphony.module.propertyset.PropertySet;
 import com.opensymphony.workflow.WorkflowException;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -51,19 +54,19 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunner.class);
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
-    private final FieldManager fieldManager;
     private final BambooRestApi bambooRestApi;
     private final FunctionDescriptorUtils functionDescriptorUtils;
+    private final I18nHelper i18nHelper;
 
     @Inject
     public BambooPlanRunner(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
-                            @ComponentImport FieldManager fieldManager,
+                            @ComponentImport I18nHelper i18nHelper,
                             BambooRestApi bambooRestApi,
                             FunctionDescriptorUtils functionDescriptorUtils) {
         this.applicationLinkService = applicationLinkService;
-        this.fieldManager = fieldManager;
         this.bambooRestApi = bambooRestApi;
         this.functionDescriptorUtils = functionDescriptorUtils;
+        this.i18nHelper = i18nHelper;
     }
 
     @Override
@@ -82,13 +85,18 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
             return;
         }
 
+        StrSubstitutor substitutor = new StrSubstitutor(new FieldStrLookup(i18nHelper, (Issue) transientVars.get("issue")),
+                "$(",
+                ")",
+                '\\');
         final Map<String, String> selectedValuesByVariable = new HashMap<>();
         functionDescriptorUtils.createMapFromString((String) args.get(FIELD_SELECTED_VALUES_BY_VARIABLE))
-                .forEach((variable, value) -> {
-                    selectedValuesByVariable.put(RegExUtils.removeFirst(variable,
-                            MessageFormat.format(".*for_{0}_{1}_", selectedApplinkId, selectedPlan)),
-                            value);
-                });
+                .forEach((variable, value) ->
+                        selectedValuesByVariable.put(
+                                RegExUtils.removeFirst(variable,
+                                        MessageFormat.format(".*for_{0}_{1}_", selectedApplinkId, selectedPlan)),
+                                substitutor.replace(value))
+                );
 
         ReadOnlyApplicationLink selectedApplink = applicationLinkService.getApplicationLink(new ApplicationId(selectedApplinkId));
         if (selectedApplink == null) {
