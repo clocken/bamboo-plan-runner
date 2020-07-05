@@ -39,21 +39,27 @@ public final class FieldAccessorImpl implements FieldAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(FieldAccessorImpl.class);
     private static final List<String> FIELDS_TO_EXCLUDE;
+    private static final Map<String, String> VALUE_REPRESENTATION_IDS_BY_FIELD_ID;
 
     static {
         List<String> tmpList = new ArrayList<>();
-        tmpList.add("customfield_10100");
-        tmpList.add("customfield_10001");
-        tmpList.add("customfield_10002");
+        tmpList.add("customfield_10100"); // Development
+        tmpList.add("customfield_10001"); // Epic Link
+        tmpList.add("customfield_10002"); // Epic Status
         tmpList.add("thumbnail");
         tmpList.add("issuelinks");
         tmpList.add("progress");
-        tmpList.add("customfield_10000");
-        tmpList.add("customfield_10005");
-        tmpList.add("customfield_10006");
+        tmpList.add("customfield_10000"); // Rank
+        tmpList.add("customfield_10005"); // Sprint
+        tmpList.add("customfield_10006"); // Story Points
         tmpList.add("subtasks");
         tmpList.add("aggregateprogress");
         FIELDS_TO_EXCLUDE = Collections.unmodifiableList(tmpList);
+
+        Map<String, String> tmpMap = new HashMap<>();
+        tmpMap.put("issuekey", "key");
+        tmpMap.put("project", "key");
+        VALUE_REPRESENTATION_IDS_BY_FIELD_ID = Collections.unmodifiableMap(tmpMap);
     }
 
     private final FieldManager fieldManager;
@@ -122,7 +128,7 @@ public final class FieldAccessorImpl implements FieldAccessor {
         final List<String> fieldValues = new ArrayList<>();
         ((ExportableSystemField) field)
                 .getRepresentationFromIssue(issue)
-                .getPartWithId(identifier)
+                .getPartWithId(VALUE_REPRESENTATION_IDS_BY_FIELD_ID.getOrDefault(identifier, identifier))
                 .ifPresent(fieldExportPart ->
                         fieldExportPart.getValues().forEach(fieldValues::add));
 
