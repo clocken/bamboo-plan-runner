@@ -62,12 +62,27 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
     private static final Pattern KEY_PREFIX_PATTERN = Pattern.compile("(.*)_for.*");
     private static final Map<String, String> VARIABLE_VALUE_KEY_PREFIX;
+    private static final List<String> FIELDS_TO_EXCLUDE;
 
     static {
         Map<String, String> tmpMap = new HashMap<>();
         tmpMap.put("use_field", "selected_field_for");
         tmpMap.put("use_custom_value", "custom_value_for");
         VARIABLE_VALUE_KEY_PREFIX = Collections.unmodifiableMap(tmpMap);
+
+        List<String> tmpList = new ArrayList<>();
+        tmpList.add("customfield_10100");
+        tmpList.add("customfield_10001");
+        tmpList.add("customfield_10002");
+        tmpList.add("thumbnail");
+        tmpList.add("issuelinks");
+        tmpList.add("progress");
+        tmpList.add("customfield_10000");
+        tmpList.add("customfield_10005");
+        tmpList.add("customfield_10006");
+        tmpList.add("subtasks");
+        tmpList.add("aggregateprogress");
+        FIELDS_TO_EXCLUDE = Collections.unmodifiableList(tmpList);
     }
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
@@ -202,7 +217,8 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private List<Field> getAllJiraFields() throws FieldException {
         List<Field> fields = new ArrayList<>();
         fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
-            if (!navigableField.getName().startsWith("?")) {
+            if (!navigableField.getName().startsWith("?")
+                    && !FIELDS_TO_EXCLUDE.contains(navigableField.getId())) {
                 fields.add(navigableField);
             }
         });
