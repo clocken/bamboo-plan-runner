@@ -21,7 +21,6 @@ import com.atlassian.applinks.api.CredentialsRequiredException;
 import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
 import com.atlassian.applinks.api.application.bamboo.BambooApplicationType;
-import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldException;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.plugin.workflow.AbstractWorkflowPluginFactory;
@@ -30,6 +29,7 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Base64EncodedHashMap;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FieldAccessor;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FunctionDescriptorUtils;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan;
@@ -62,27 +62,13 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunnerFactory.class);
     private static final Pattern KEY_PREFIX_PATTERN = Pattern.compile("(.*)_for.*");
     private static final Map<String, String> VARIABLE_VALUE_KEY_PREFIX;
-    private static final List<String> FIELDS_TO_EXCLUDE;
+
 
     static {
         Map<String, String> tmpMap = new HashMap<>();
         tmpMap.put("use_field", "selected_field_for");
         tmpMap.put("use_custom_value", "custom_value_for");
         VARIABLE_VALUE_KEY_PREFIX = Collections.unmodifiableMap(tmpMap);
-
-        List<String> tmpList = new ArrayList<>();
-        tmpList.add("customfield_10100");
-        tmpList.add("customfield_10001");
-        tmpList.add("customfield_10002");
-        tmpList.add("thumbnail");
-        tmpList.add("issuelinks");
-        tmpList.add("progress");
-        tmpList.add("customfield_10000");
-        tmpList.add("customfield_10005");
-        tmpList.add("customfield_10006");
-        tmpList.add("subtasks");
-        tmpList.add("aggregateprogress");
-        FIELDS_TO_EXCLUDE = Collections.unmodifiableList(tmpList);
     }
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
@@ -90,6 +76,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
     private final FunctionDescriptorUtils functionDescriptorUtils;
+    private final FieldAccessor fieldAccessor;
     private final Map<ApplicationId, List<Plan>> plansByApplink = new HashMap<>();
 
     @Inject
@@ -97,12 +84,14 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
                                    @ComponentImport FieldManager fieldManager,
                                    @ComponentImport I18nHelper i18nHelper,
                                    BambooRestApi bambooRestApi,
-                                   FunctionDescriptorUtils functionDescriptorUtils) {
+                                   FunctionDescriptorUtils functionDescriptorUtils,
+                                   FieldAccessor fieldAccessor) {
         this.applicationLinkService = applicationLinkService;
         this.fieldManager = fieldManager;
         this.i18nHelper = i18nHelper;
         this.bambooRestApi = bambooRestApi;
         this.functionDescriptorUtils = functionDescriptorUtils;
+        this.fieldAccessor = fieldAccessor;
     }
 
     @Override
@@ -124,7 +113,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         });
 
         try {
-            velocityParams.put(FIELD_FIELDS, getAllJiraFields());
+            velocityParams.put(FIELD_FIELDS, fieldAccessor.getAllExportableStringBasedJiraFields());
         } catch (FieldException e) {
             // TODO: implement user feedback for this
             LOG.error("Error while fetching JIRA fields: {}", e.getMessage());
@@ -212,19 +201,6 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         params.put(FIELD_SELECTED_VALUES_BY_VARIABLE, selectedValuesByVariable);
 
         return params;
-    }
-
-    private List<Field> getAllJiraFields() throws FieldException {
-        List<Field> fields = new ArrayList<>();
-        fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
-            if (!navigableField.getName().startsWith("?")
-                    && !FIELDS_TO_EXCLUDE.contains(navigableField.getId())) {
-                fields.add(navigableField);
-            }
-        });
-        fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()),
-                i18nHelper.getText(field2.getNameKey())));
-        return Collections.unmodifiableList(fields);
     }
 
     private String getSelectedValueForVariableKey(String selectedValueType, String selectedApplink, String planKey, String variable) {

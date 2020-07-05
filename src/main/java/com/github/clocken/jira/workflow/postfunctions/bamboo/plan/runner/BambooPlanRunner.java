@@ -26,6 +26,7 @@ import com.atlassian.jira.workflow.function.issue.AbstractJiraFunctionProvider;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.FieldValueLookup;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FieldAccessor;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FunctionDescriptorUtils;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
 import com.opensymphony.module.propertyset.PropertySet;
@@ -54,19 +55,21 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
     private static final Logger LOG = LoggerFactory.getLogger(BambooPlanRunner.class);
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
+    private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
     private final FunctionDescriptorUtils functionDescriptorUtils;
-    private final I18nHelper i18nHelper;
+    private final FieldAccessor fieldAccessor;
 
     @Inject
     public BambooPlanRunner(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
                             @ComponentImport I18nHelper i18nHelper,
                             BambooRestApi bambooRestApi,
-                            FunctionDescriptorUtils functionDescriptorUtils) {
+                            FunctionDescriptorUtils functionDescriptorUtils, FieldAccessor fieldAccessor) {
         this.applicationLinkService = applicationLinkService;
         this.bambooRestApi = bambooRestApi;
         this.functionDescriptorUtils = functionDescriptorUtils;
         this.i18nHelper = i18nHelper;
+        this.fieldAccessor = fieldAccessor;
     }
 
     @Override
@@ -85,7 +88,7 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
             return;
         }
 
-        StrSubstitutor substitutor = new StrSubstitutor(new FieldValueLookup(i18nHelper, (Issue) transientVars.get("issue")),
+        StrSubstitutor substitutor = new StrSubstitutor(new FieldValueLookup(i18nHelper, fieldAccessor, (Issue) transientVars.get("issue")),
                 "$(",
                 ")",
                 '\\');
