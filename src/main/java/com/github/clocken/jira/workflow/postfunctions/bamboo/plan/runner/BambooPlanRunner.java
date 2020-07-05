@@ -90,7 +90,7 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
                 ")",
                 '\\');
         final Map<String, String> selectedValuesByVariable = new HashMap<>();
-        functionDescriptorUtils.createMapFromString((String) args.get(FIELD_SELECTED_VALUES_BY_VARIABLE))
+        functionDescriptorUtils.createDecodedMapFromBase64String((String) args.get(FIELD_SELECTED_VALUES_BY_VARIABLE))
                 .forEach((variable, value) ->
                         selectedValuesByVariable.put(
                                 RegExUtils.removeFirst(variable,

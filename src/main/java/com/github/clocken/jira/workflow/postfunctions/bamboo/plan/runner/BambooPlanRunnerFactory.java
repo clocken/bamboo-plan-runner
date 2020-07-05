@@ -29,6 +29,7 @@ import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Base64EncodedHashMap;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.FunctionDescriptorUtils;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan;
@@ -160,8 +161,8 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         params.put(FIELD_SELECTED_PLAN_FOR + selectedApplink, selectedPlanForApplink);
 
         List<String> variablesToUse = new ArrayList<>();
-        Map<String, String> selectedValueTypesByVariable = new HashMap<>();
-        Map<String, String> selectedValuesByVariable = new HashMap<>();
+        Map<String, String> selectedValueTypesByVariable = new Base64EncodedHashMap();
+        Map<String, String> selectedValuesByVariable = new Base64EncodedHashMap();
         plansByApplink.get(new ApplicationId(selectedApplink)).forEach(plan -> {
             if (StringUtils.endsWith(selectedPlanForApplink, plan.getKey())) {
 

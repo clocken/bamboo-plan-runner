@@ -69,11 +69,11 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
             return Collections.emptyMap();
         }
 
-        return Collections.unmodifiableMap(createMapFromString(descriptorParam));
+        return Collections.unmodifiableMap(createDecodedMapFromBase64String(descriptorParam));
     }
 
     @Override
-    public Map<String, String> createMapFromString(String map) {
+    public Map<String, String> createDecodedMapFromBase64String(String map) {
         if (StringUtils.isEmpty(map)) {
             return Collections.emptyMap();
         }
@@ -85,8 +85,13 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
                         .replace(" ", "")
                         .split(",")) {
             if (StringUtils.isNotEmpty(mapEntry)) {
-                parsedMap.put(StringUtils.substringBefore(mapEntry, "="),
-                        StringUtils.substringAfter(mapEntry, "="));
+                parsedMap.put(
+                        new String(
+                                Base64.getDecoder()
+                                        .decode(StringUtils.substringBefore(mapEntry, "="))),
+                        new String(
+                                Base64.getDecoder()
+                                        .decode(StringUtils.substringAfter(mapEntry, "="))));
             }
         }
 

@@ -18,11 +18,14 @@ package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.intern
 
 import com.opensymphony.workflow.loader.FunctionDescriptor;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Utilities for the {@link FunctionDescriptor}
+ * Utilities for the {@link FunctionDescriptor}.<br>
+ * These utilities may be used to work around the fact that the contents of the {@link FunctionDescriptor} somehow get
+ * saved as string values only by the OpenSymphony Workflow engine.
  */
 public interface FunctionDescriptorUtils {
     /**
@@ -52,10 +55,12 @@ public interface FunctionDescriptorUtils {
     Map<String, String> parseMapFromFunctionDescriptor(FunctionDescriptor functionDescriptor, String key);
 
     /**
-     * Creates a {@link Map} from the given string. The string should look like the result from {@link Map#toString()}
+     * Creates a {@link Map} from the given string.<br>
+     * The string should look like the result from {@link Map#toString()} and the keys and values should be
+     * Base64 encoded without padding according to the standard encoding by {@link Base64.Encoder#withoutPadding()}.
      *
-     * @param map the string to create the map from
-     * @return the (unmodifiable) {@link Map}
+     * @param map the string to create the map from. Keys and values should be Base64 encoded.
+     * @return the (unmodifiable) {@link Map}. Keys and values are Base64 decoded.
      */
-    Map<String, String> createMapFromString(String map);
+    Map<String, String> createDecodedMapFromBase64String(String map);
 }
