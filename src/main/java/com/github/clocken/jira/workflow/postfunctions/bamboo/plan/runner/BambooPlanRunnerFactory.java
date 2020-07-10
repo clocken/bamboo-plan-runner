@@ -63,12 +63,11 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     private static final Pattern KEY_PREFIX_PATTERN = Pattern.compile("(.*)_for.*");
     private static final Map<String, String> VARIABLE_VALUE_KEY_PREFIX;
 
-
     static {
-        Map<String, String> tmpMap = new HashMap<>();
-        tmpMap.put("use_field", "selected_field_for");
-        tmpMap.put("use_custom_value", "custom_value_for");
-        VARIABLE_VALUE_KEY_PREFIX = Collections.unmodifiableMap(tmpMap);
+        Map<String, String> variableValuePrefix = new HashMap<>();
+        variableValuePrefix.put("use_field", "selected_field_for");
+        variableValuePrefix.put("use_custom_value", "custom_value_for");
+        VARIABLE_VALUE_KEY_PREFIX = Collections.unmodifiableMap(variableValuePrefix);
     }
 
     private final ReadOnlyApplicationLinkService applicationLinkService;

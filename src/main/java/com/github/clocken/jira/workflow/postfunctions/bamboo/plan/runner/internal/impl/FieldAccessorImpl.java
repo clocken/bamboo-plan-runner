@@ -42,24 +42,24 @@ public final class FieldAccessorImpl implements FieldAccessor {
     private static final Map<String, String> VALUE_REPRESENTATION_IDS_BY_FIELD_ID;
 
     static {
-        List<String> tmpList = new ArrayList<>();
-        tmpList.add("customfield_10100"); // Development
-        tmpList.add("customfield_10001"); // Epic Link
-        tmpList.add("customfield_10002"); // Epic Status
-        tmpList.add("thumbnail");
-        tmpList.add("issuelinks");
-        tmpList.add("progress");
-        tmpList.add("customfield_10000"); // Rank
-        tmpList.add("customfield_10005"); // Sprint
-        tmpList.add("customfield_10006"); // Story Points
-        tmpList.add("subtasks");
-        tmpList.add("aggregateprogress");
-        FIELDS_TO_EXCLUDE = Collections.unmodifiableList(tmpList);
+        List<String> fieldsToExclude = new ArrayList<>();
+        fieldsToExclude.add("customfield_10100"); // Development
+        fieldsToExclude.add("customfield_10001"); // Epic Link
+        fieldsToExclude.add("customfield_10002"); // Epic Status
+        fieldsToExclude.add("thumbnail");
+        fieldsToExclude.add("issuelinks");
+        fieldsToExclude.add("progress");
+        fieldsToExclude.add("customfield_10000"); // Rank
+        fieldsToExclude.add("customfield_10005"); // Sprint
+        fieldsToExclude.add("customfield_10006"); // Story Points
+        fieldsToExclude.add("subtasks");
+        fieldsToExclude.add("aggregateprogress");
+        FIELDS_TO_EXCLUDE = Collections.unmodifiableList(fieldsToExclude);
 
-        Map<String, String> tmpMap = new HashMap<>();
-        tmpMap.put("issuekey", "key");
-        tmpMap.put("project", "key");
-        VALUE_REPRESENTATION_IDS_BY_FIELD_ID = Collections.unmodifiableMap(tmpMap);
+        Map<String, String> valueRepresentationIdsByFieldId = new HashMap<>();
+        valueRepresentationIdsByFieldId.put("issuekey", "key");
+        valueRepresentationIdsByFieldId.put("project", "key");
+        VALUE_REPRESENTATION_IDS_BY_FIELD_ID = Collections.unmodifiableMap(valueRepresentationIdsByFieldId);
     }
 
     private final FieldManager fieldManager;
