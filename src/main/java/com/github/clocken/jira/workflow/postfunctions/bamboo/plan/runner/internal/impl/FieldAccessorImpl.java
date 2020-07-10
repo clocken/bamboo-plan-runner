@@ -16,9 +16,10 @@
 
 package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.impl;
 
-import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.export.ExportableSystemField;
+import com.atlassian.jira.issue.export.customfield.ExportableCustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldException;
@@ -38,24 +39,9 @@ import java.util.*;
 public final class FieldAccessorImpl implements FieldAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(FieldAccessorImpl.class);
-    private static final List<String> FIELDS_TO_EXCLUDE;
     private static final Map<String, String> VALUE_REPRESENTATION_IDS_BY_FIELD_ID;
 
     static {
-        List<String> fieldsToExclude = new ArrayList<>();
-        fieldsToExclude.add("customfield_10100"); // Development
-        fieldsToExclude.add("customfield_10001"); // Epic Link
-        fieldsToExclude.add("customfield_10002"); // Epic Status
-        fieldsToExclude.add("thumbnail");
-        fieldsToExclude.add("issuelinks");
-        fieldsToExclude.add("progress");
-        fieldsToExclude.add("customfield_10000"); // Rank
-        fieldsToExclude.add("customfield_10005"); // Sprint
-        fieldsToExclude.add("customfield_10006"); // Story Points
-        fieldsToExclude.add("subtasks");
-        fieldsToExclude.add("aggregateprogress");
-        FIELDS_TO_EXCLUDE = Collections.unmodifiableList(fieldsToExclude);
-
         Map<String, String> valueRepresentationIdsByFieldId = new HashMap<>();
         valueRepresentationIdsByFieldId.put("issuekey", "key");
         valueRepresentationIdsByFieldId.put("project", "key");
@@ -63,35 +49,39 @@ public final class FieldAccessorImpl implements FieldAccessor {
     }
 
     private final FieldManager fieldManager;
+    private final CustomFieldManager customFieldManager;
     private final I18nHelper i18nHelper;
 
     public FieldAccessorImpl(@ComponentImport FieldManager fieldManager,
+                             @ComponentImport CustomFieldManager customFieldManager,
                              @ComponentImport I18nHelper i18nHelper) {
         this.fieldManager = fieldManager;
+        this.customFieldManager = customFieldManager;
         this.i18nHelper = i18nHelper;
     }
 
     @Override
-    public List<Field> getAllExportableStringBasedJiraFields() throws FieldException {
+    public List<Field> getAllExportableJiraFields() throws FieldException {
         List<Field> fields = new ArrayList<>();
         fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
             if (!navigableField.getName().startsWith("?")
-                    && !FIELDS_TO_EXCLUDE.contains(navigableField.getId())) {
+                    && (navigableField instanceof ExportableSystemField
+                    || (navigableField instanceof CustomField
+                    && ((CustomField) navigableField).getCustomFieldType() instanceof ExportableCustomFieldType))) {
                 fields.add(navigableField);
             }
         });
         fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()),
                 i18nHelper.getText(field2.getNameKey())));
+
         return Collections.unmodifiableList(fields);
     }
 
     @Override
     public Optional<String> getCustomFieldValueFromIssue(Issue issue, String identifier) {
-        CustomField customField = ComponentAccessor.getCustomFieldManager()
-                .getCustomFieldObject(identifier);
+        CustomField customField = customFieldManager.getCustomFieldObject(identifier);
         if (customField == null) {
-            Collection<CustomField> customFieldObjects = ComponentAccessor.getCustomFieldManager()
-                    .getCustomFieldObjectsByName(identifier);
+            Collection<CustomField> customFieldObjects = customFieldManager.getCustomFieldObjectsByName(identifier);
             if (customFieldObjects.isEmpty()) {
                 LOG.warn("Custom field '{}' not found.", identifier);
                 return Optional.empty();
@@ -114,8 +104,7 @@ public final class FieldAccessorImpl implements FieldAccessor {
 
     @Override
     public Optional<String> getSystemFieldValueFromIssue(Issue issue, String identifier) {
-        Field field = ComponentAccessor.getFieldManager()
-                .getField(identifier);
+        Field field = fieldManager.getField(identifier);
         if (field == null) {
             LOG.warn("System field '{}' not found.", identifier);
             return Optional.empty();

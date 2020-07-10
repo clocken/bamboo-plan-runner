@@ -112,7 +112,7 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         });
 
         try {
-            velocityParams.put(FIELD_FIELDS, fieldAccessor.getAllExportableStringBasedJiraFields());
+            velocityParams.put(FIELD_FIELDS, fieldAccessor.getAllExportableJiraFields());
         } catch (FieldException e) {
             // TODO: implement user feedback for this
             LOG.error("Error while fetching JIRA fields: {}", e.getMessage());

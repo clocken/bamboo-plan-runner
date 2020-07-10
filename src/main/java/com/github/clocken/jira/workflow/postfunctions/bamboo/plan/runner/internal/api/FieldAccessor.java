@@ -29,13 +29,13 @@ import java.util.Optional;
 public interface FieldAccessor {
 
     /**
-     * Gets a list of all JIRA fields that are exportable (see {@link com.atlassian.jira.issue.export.ExportableSystemField})
-     * and have String-based values.
+     * Gets a list of all JIRA fields that are exportable (see {@link com.atlassian.jira.issue.export.ExportableSystemField}
+     * and {@link com.atlassian.jira.issue.export.customfield.ExportableCustomFieldType}).
      *
-     * @return The list of JIRA fields
+     * @return The list of exportable JIRA fields
      * @throws FieldException in case of a field access error
      */
-    List<Field> getAllExportableStringBasedJiraFields() throws FieldException;
+    List<Field> getAllExportableJiraFields() throws FieldException;
 
     /**
      * Tries to get a field value from the given issue by interpreting the given identifier as a <i>Custom field ID</i> or
