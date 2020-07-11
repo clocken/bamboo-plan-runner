@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.text.MessageFormat;
 import java.util.*;
 
 @Named
@@ -44,7 +43,7 @@ public final class FieldAccessorImpl implements FieldAccessor {
     static {
         Map<String, String> valueRepresentationIdsByFieldId = new HashMap<>();
         valueRepresentationIdsByFieldId.put("issuekey", "key");
-        valueRepresentationIdsByFieldId.put("project", "key");
+        valueRepresentationIdsByFieldId.put("project", "projectName");
         VALUE_REPRESENTATION_IDS_BY_FIELD_ID = Collections.unmodifiableMap(valueRepresentationIdsByFieldId);
     }
 
@@ -86,20 +85,33 @@ public final class FieldAccessorImpl implements FieldAccessor {
                 LOG.warn("Custom field '{}' not found.", identifier);
                 return Optional.empty();
             } else if (customFieldObjects.size() > 1) {
-                throw new IllegalArgumentException(
-                        MessageFormat.format("Ambiguous custom field name {0}. Use the custom field ID instead.", identifier));
+                LOG.error("Ambiguous custom field name {}. Use the custom field ID instead.", identifier);
+                return Optional.empty();
             }
             customField = customFieldObjects
                     .iterator()
                     .next();
         }
-
-        if (customField.getValueFromIssue(issue) == null) {
-            LOG.warn("Value of custom field '{}' resolved to null. Returning empty string.", identifier);
-            return Optional.of(StringUtils.EMPTY);
+        if (!(customField.getCustomFieldType() instanceof ExportableCustomFieldType)) {
+            LOG.warn("Value of custom field '{}' is not exportable.", identifier);
+            return Optional.empty();
         }
 
-        return Optional.of(customField.getValueFromIssue(issue));
+        final List<String> fieldValues = new ArrayList<>();
+        ((ExportableCustomFieldType) customField.getCustomFieldType())
+                .getRepresentationFromIssue(issue, new CustomFieldExportContext(customField, i18nHelper))
+                .getParts()
+                .stream()
+                .filter(
+                        fieldExportPart ->
+                                StringUtils.equals(fieldExportPart.getId(), VALUE_REPRESENTATION_IDS_BY_FIELD_ID.getOrDefault(identifier, identifier))
+                                        || StringUtils.equals(fieldExportPart.getItemLabel(), identifier)
+                )
+                .findAny()
+                .ifPresent(fieldExportPart ->
+                        fieldExportPart.getValues().forEach(fieldValues::add));
+
+        return Optional.of(StringUtils.join(fieldValues, ", "));
     }
 
     @Override
@@ -122,5 +134,31 @@ public final class FieldAccessorImpl implements FieldAccessor {
                         fieldExportPart.getValues().forEach(fieldValues::add));
 
         return Optional.of(StringUtils.join(fieldValues, ", "));
+    }
+
+    private static final class CustomFieldExportContext implements com.atlassian.jira.issue.export.customfield.CustomFieldExportContext {
+
+        private final CustomField customField;
+        private final I18nHelper i18nHelper;
+
+        public CustomFieldExportContext(CustomField customField, I18nHelper i18nHelper) {
+            this.customField = customField;
+            this.i18nHelper = i18nHelper;
+        }
+
+        @Override
+        public CustomField getCustomField() {
+            return customField;
+        }
+
+        @Override
+        public I18nHelper getI18nHelper() {
+            return i18nHelper;
+        }
+
+        @Override
+        public String getDefaultColumnHeader() {
+            return i18nHelper.getText(customField.getColumnHeadingKey(), customField.getName());
+        }
     }
 }

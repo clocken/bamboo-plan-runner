@@ -43,10 +43,10 @@ public interface FieldAccessor {
      *
      * @param issue      The issue to get the field value from
      * @param identifier <i>Custom field ID</i> or <i>Custom field name</i>
-     * @return The field value wrapped in an {@link Optional}, may be an empty string, if the value resolved to
-     * <code>null</code>.<br>
-     * An empty {@link Optional}, if the field could not be found.
-     * @throws IllegalArgumentException in case the <i>Custom field name</i> is ambiguous
+     * @return The field value wrapped in an {@link Optional}.<br>
+     * An empty {@link Optional}, if the field could not be found, is not an exportable custom field
+     * (see {@link com.atlassian.jira.issue.export.customfield.ExportableCustomFieldType}
+     * or an ambiguous <i>Custom field name</i> was given.
      */
     Optional<String> getCustomFieldValueFromIssue(Issue issue, String identifier);
 
@@ -55,9 +55,9 @@ public interface FieldAccessor {
      *
      * @param issue      The issue to get the field value from
      * @param identifier <i>System field ID</i>
-     * @return The field value wrapped in an {@link Optional}, may be an empty string, if the value resolved to <code>null</code>.<br>
+     * @return The field value wrapped in an {@link Optional}.<br>
      * An empty {@link Optional}, if the field could not be found or is not an exportable field
-     * (see {@link com.atlassian.jira.issue.export.ExportableSystemField})<br>
+     * (see {@link com.atlassian.jira.issue.export.ExportableSystemField}).
      */
     Optional<String> getSystemFieldValueFromIssue(Issue issue, String identifier);
 }
