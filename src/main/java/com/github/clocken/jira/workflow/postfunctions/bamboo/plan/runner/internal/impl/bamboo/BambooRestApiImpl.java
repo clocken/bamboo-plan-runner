@@ -37,7 +37,6 @@ import java.util.Map;
 
 import static com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan.Builder.aPlan;
 
-// TODO: Use Jackson for JSON mapping?
 @Named
 public final class BambooRestApiImpl implements BambooRestApi {
 

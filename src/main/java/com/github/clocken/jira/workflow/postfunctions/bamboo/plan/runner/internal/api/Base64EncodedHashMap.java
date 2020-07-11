@@ -19,6 +19,10 @@ package com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.intern
 import java.util.Base64;
 import java.util.HashMap;
 
+/**
+ * An extension of {@link HashMap}, that encodes keys and values with {@link Base64.Encoder#withoutPadding()} when they are put.<br>
+ * Note, that decoding is not implemented as {@link HashMap#get(Object)} is not overridden.
+ */
 public class Base64EncodedHashMap extends HashMap<String, String> {
 
     @Override

@@ -48,15 +48,13 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
         }
 
         List<String> parsedList = new ArrayList<>();
-        for (String listEntry :
-                list.replace("[", "")
-                        .replace("]", "")
-                        .replace(" ", "")
-                        .split(",")) {
-            if (StringUtils.isNotEmpty(listEntry)) {
-                parsedList.add(listEntry);
-            }
-        }
+        Arrays.stream(list
+                .replace("[", "")
+                .replace("]", "")
+                .replace(" ", "")
+                .split(","))
+                .filter(StringUtils::isNotEmpty)
+                .forEach(parsedList::add);
 
         return Collections.unmodifiableList(parsedList);
     }
@@ -79,21 +77,21 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
         }
 
         Map<String, String> parsedMap = new HashMap<>();
-        for (String mapEntry :
-                map.replace("{", "")
-                        .replace("}", "")
-                        .replace(" ", "")
-                        .split(",")) {
-            if (StringUtils.isNotEmpty(mapEntry)) {
-                parsedMap.put(
-                        new String(
-                                Base64.getDecoder()
-                                        .decode(StringUtils.substringBefore(mapEntry, "="))),
-                        new String(
-                                Base64.getDecoder()
-                                        .decode(StringUtils.substringAfter(mapEntry, "="))));
-            }
-        }
+        Arrays.stream(map
+                .replace("{", "")
+                .replace("}", "")
+                .replace(" ", "")
+                .split(","))
+                .filter(StringUtils::isNotEmpty)
+                .forEach(mapEntry -> {
+                    parsedMap.put(
+                            new String(
+                                    Base64.getDecoder()
+                                            .decode(StringUtils.substringBefore(mapEntry, "="))),
+                            new String(
+                                    Base64.getDecoder()
+                                            .decode(StringUtils.substringAfter(mapEntry, "="))));
+                });
 
         return Collections.unmodifiableMap(parsedMap);
     }
