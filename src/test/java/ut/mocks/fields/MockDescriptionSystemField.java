@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ut.mock.fields;
+package ut.mocks.fields;
 
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.export.ExportableSystemField;

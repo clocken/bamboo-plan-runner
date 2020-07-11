@@ -30,10 +30,10 @@ import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.interna
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
-import ut.mock.fields.MockCustomFieldWithNameKey;
-import ut.mock.fields.MockDescriptionSystemField;
-import ut.mock.fields.MockLabelsCFType;
-import ut.mock.fields.MockNavigableFieldWithName;
+import ut.mocks.fields.MockCustomFieldWithNameKey;
+import ut.mocks.fields.MockDescriptionSystemField;
+import ut.mocks.fields.MockLabelsCFType;
+import ut.mocks.fields.MockNavigableFieldWithName;
 
 import java.util.Arrays;
 import java.util.HashSet;
