@@ -22,10 +22,8 @@ import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.applinks.api.ReadOnlyApplicationLinkService;
 import com.atlassian.applinks.api.application.bamboo.BambooApplicationType;
 import com.atlassian.jira.issue.fields.FieldException;
-import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.plugin.workflow.AbstractWorkflowPluginFactory;
 import com.atlassian.jira.plugin.workflow.WorkflowPluginFunctionFactory;
-import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.Base64EncodedHashMap;
@@ -71,8 +69,6 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
     }
 
     private final ReadOnlyApplicationLinkService applicationLinkService;
-    private final FieldManager fieldManager;
-    private final I18nHelper i18nHelper;
     private final BambooRestApi bambooRestApi;
     private final FunctionDescriptorUtils functionDescriptorUtils;
     private final FieldAccessor fieldAccessor;
@@ -80,14 +76,10 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
     @Inject
     public BambooPlanRunnerFactory(@ComponentImport ReadOnlyApplicationLinkService applicationLinkService,
-                                   @ComponentImport FieldManager fieldManager,
-                                   @ComponentImport I18nHelper i18nHelper,
                                    BambooRestApi bambooRestApi,
                                    FunctionDescriptorUtils functionDescriptorUtils,
                                    FieldAccessor fieldAccessor) {
         this.applicationLinkService = applicationLinkService;
-        this.fieldManager = fieldManager;
-        this.i18nHelper = i18nHelper;
         this.bambooRestApi = bambooRestApi;
         this.functionDescriptorUtils = functionDescriptorUtils;
         this.fieldAccessor = fieldAccessor;
