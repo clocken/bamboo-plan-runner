@@ -83,15 +83,14 @@ public final class FunctionDescriptorUtilsImpl implements FunctionDescriptorUtil
                 .replace(" ", "")
                 .split(","))
                 .filter(StringUtils::isNotEmpty)
-                .forEach(mapEntry -> {
-                    parsedMap.put(
-                            new String(
-                                    Base64.getDecoder()
-                                            .decode(StringUtils.substringBefore(mapEntry, "="))),
-                            new String(
-                                    Base64.getDecoder()
-                                            .decode(StringUtils.substringAfter(mapEntry, "="))));
-                });
+                .forEach(mapEntry -> parsedMap.put(
+                        new String(
+                                Base64.getDecoder()
+                                        .decode(StringUtils.substringBefore(mapEntry, "="))),
+                        new String(
+                                Base64.getDecoder()
+                                        .decode(StringUtils.substringAfter(mapEntry, "="))))
+                );
 
         return Collections.unmodifiableMap(parsedMap);
     }
