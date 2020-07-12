@@ -1,0 +1,66 @@
+{
+  "expand": "actions,stages,branches,variableContext",
+  "projectKey": "PLAYG",
+  "projectName": "playground",
+  "project": {
+    "key": "PLAYG",
+    "name": "playground",
+    "description": "",
+    "link": {
+      "href": "http://mock/rest/api/latest/project/PLAYG",
+      "rel": "self"
+    }
+  },
+  "shortName": "variable-test",
+  "buildName": "variable-test",
+  "shortKey": "VAR",
+  "type": "chain",
+  "enabled": true,
+  "link": {
+    "href": "http://mock/rest/api/latest/plan/PLAYG-VAR",
+    "rel": "self"
+  },
+  "isFavourite": false,
+  "isActive": false,
+  "isBuilding": false,
+  "averageBuildTimeInSeconds": 0.0,
+  "actions": {
+    "size": 7,
+    "start-index": 0,
+    "max-result": 7
+  },
+  "stages": {
+    "size": 1,
+    "start-index": 0,
+    "max-result": 1
+  },
+  "branches": {
+    "size": 0,
+    "start-index": 0,
+    "max-result": 0
+  },
+  "variableContext": {
+    "size": 2,
+    "max-results": 2,
+    "start-index": 0,
+    "variable": [
+      {
+        "key": "VARIABLE_TWO",
+        "value": "testValue-Two",
+        "variableType": "PLAN",
+        "isPassword": false
+      },
+      {
+        "key": "VARIABLE_ONE",
+        "value": "testValue-One",
+        "variableType": "PLAN",
+        "isPassword": false
+      }
+    ]
+  },
+  "key": "PLAYG-VAR",
+  "name": "playground - variable-test",
+  "planKey": {
+    "key": "PLAYG-VAR"
+  }
+}

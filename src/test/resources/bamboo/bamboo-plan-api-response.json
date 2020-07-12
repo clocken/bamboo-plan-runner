@@ -1,0 +1,30 @@
+{
+  "expand": "plans",
+  "link": {
+    "href": "http://mock/rest/api/latest/plan",
+    "rel": "self"
+  },
+  "plans": {
+    "size": 1,
+    "expand": "plan",
+    "start-index": 0,
+    "max-result": 1,
+    "plan": [
+      {
+        "shortName": "variable-test",
+        "shortKey": "VAR",
+        "type": "chain",
+        "enabled": true,
+        "link": {
+          "href": "http://mock/rest/api/latest/plan/PLAYG-VAR",
+          "rel": "self"
+        },
+        "key": "PLAYG-VAR",
+        "name": "playground - variable-test",
+        "planKey": {
+          "key": "PLAYG-VAR"
+        }
+      }
+    ]
+  }
+}
