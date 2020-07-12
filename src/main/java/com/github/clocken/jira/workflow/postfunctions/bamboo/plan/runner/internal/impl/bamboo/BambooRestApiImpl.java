@@ -25,6 +25,7 @@ import com.atlassian.sal.api.net.Request;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Named;
 import java.net.MalformedURLException;
@@ -102,11 +103,17 @@ public final class BambooRestApiImpl implements BambooRestApi {
                                 planVariables.add(jsonPlanVariable.getString("key"));
                             }
 
+                            String planDescription = StringUtils.EMPTY;
+                            try {
+                                planDescription = jsonResponse.getString("description");
+                            } catch (JSONException e) {
+                                // This is an optional parameter
+                            }
                             plans.add(aPlan()
                                     .withKey(jsonResponse.getString("key"))
                                     .withName(jsonResponse.getString("shortName"))
                                     .thatIsEnabled(jsonResponse.getBoolean("enabled"))
-                                    // TODO: Handle optional description
+                                    .withDescription(planDescription)
                                     .withLink(planLink)
                                     .withVariables(planVariables).build());
                         } catch (JSONException e) {
