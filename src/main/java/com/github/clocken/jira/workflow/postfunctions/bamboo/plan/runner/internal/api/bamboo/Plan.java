@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a Bamboo build plan. Use {@link Plan.Builder} to create a new instance of this class.
@@ -60,6 +61,23 @@ public final class Plan {
 
     public List<String> getVariables() {
         return variables;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Plan plan = (Plan) o;
+        return Objects.equals(key, plan.key) &&
+                Objects.equals(name, plan.name) &&
+                Objects.equals(description, plan.description) &&
+                Objects.equals(link, plan.link) &&
+                Objects.equals(variables, plan.variables);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key, name, description, link, variables);
     }
 
     /**

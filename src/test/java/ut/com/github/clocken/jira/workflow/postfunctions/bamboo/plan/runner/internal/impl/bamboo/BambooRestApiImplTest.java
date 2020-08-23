@@ -22,6 +22,7 @@ import com.atlassian.applinks.api.ReadOnlyApplicationLink;
 import com.atlassian.sal.api.net.Request;
 import com.atlassian.sal.api.net.ResponseException;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.BambooRestApi;
+import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan;
 import com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.impl.bamboo.BambooRestApiImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -29,11 +30,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import ut.mocks.applinks.MockApplicationLinkRequest;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
+import static com.github.clocken.jira.workflow.postfunctions.bamboo.plan.runner.internal.api.bamboo.Plan.Builder.aPlan;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,9 +50,13 @@ public class BambooRestApiImplTest {
 
     private static String planApiJsonResponse;
     private static String planVariableTestJsonResponse;
-    private ReadOnlyApplicationLink bambooApplicationLink;
+    private static Plan playgVarPlan;
     private ApplicationLinkRequestFactory applicationLinkRequestFactory;
+    private ReadOnlyApplicationLink bambooApplicationLink;
     private BambooRestApi bambooRestApi;
+
+    public BambooRestApiImplTest() throws MalformedURLException {
+    }
 
     @BeforeClass
     public static void initialize() throws Exception {
@@ -55,11 +68,25 @@ public class BambooRestApiImplTest {
                 Paths.get("src", "test", "resources", "bamboo", "plans", "variable-test.json"))
                 .map(StringUtils::stripToEmpty)
                 .collect(Collectors.joining());
+        playgVarPlan = aPlan()
+                .withKey("PLAYG-VAR")
+                .withName("variable-test")
+                .withLink(new URL("http://mock/rest/api/latest/plan/PLAYG-VAR"))
+                .thatIsEnabled(true)
+                .withVariables(Arrays.asList("VARIABLE_TWO", "VARIABLE_ONE")).build();
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         applicationLinkRequestFactory = mock(ApplicationLinkRequestFactory.class);
+        bambooApplicationLink = mock(ReadOnlyApplicationLink.class);
+        when(bambooApplicationLink.createAuthenticatedRequestFactory())
+                .thenReturn(applicationLinkRequestFactory);
+        bambooRestApi = new BambooRestApiImpl();
+    }
+
+    @Test
+    public void should_return_plans_from_bamboo_instance() throws CredentialsRequiredException, ResponseException {
         when(applicationLinkRequestFactory
                 .createRequest(Request.MethodType.GET, "/rest/api/latest/plan"))
                 .thenReturn(new MockApplicationLinkRequest(
@@ -73,16 +100,67 @@ public class BambooRestApiImplTest {
                         200,
                         true
                 ));
+        List<Plan> plans = bambooRestApi.plans(bambooApplicationLink);
 
-        bambooApplicationLink = mock(ReadOnlyApplicationLink.class);
-        when(bambooApplicationLink.createAuthenticatedRequestFactory())
-                .thenReturn(applicationLinkRequestFactory);
-
-        bambooRestApi = new BambooRestApiImpl();
+        assertTrue(1 == plans.size()
+                && playgVarPlan.equals(plans.get(0)));
     }
 
     @Test
-    public void should_return_plans_from_bamboo_instance() throws CredentialsRequiredException, ResponseException {
-        assertEquals(1, bambooRestApi.plans(bambooApplicationLink).size());
+    public void should_queue_build_for_plan() throws CredentialsRequiredException {
+        when(applicationLinkRequestFactory
+                .createRequest(Request.MethodType.POST, "/rest/api/latest/queue/PLAYG-VAR"))
+                .thenReturn(new MockApplicationLinkRequest(
+                        StringUtils.EMPTY,
+                        200,
+                        true
+                ));
+
+        try {
+            bambooRestApi.queueBuild(bambooApplicationLink, "PLAYG-VAR", Collections.emptyMap());
+        } catch (ResponseException | CredentialsRequiredException e) {
+            fail(MessageFormat.format("Exception {0} should not have been thrown.", e));
+        }
+    }
+
+    @Test(expected = ResponseException.class)
+    public void should_handle_an_unsuccessful_request_for_plans() throws CredentialsRequiredException, ResponseException {
+        when(applicationLinkRequestFactory
+                .createRequest(Request.MethodType.GET, "/rest/api/latest/plan"))
+                .thenReturn(new MockApplicationLinkRequest(
+                        StringUtils.EMPTY,
+                        500,
+                        false));
+        bambooRestApi.plans(bambooApplicationLink);
+    }
+
+    @Test(expected = ResponseException.class)
+    public void should_handle_an_unsuccessful_request_for_plan_details() throws CredentialsRequiredException, ResponseException {
+        when(applicationLinkRequestFactory
+                .createRequest(Request.MethodType.GET, "/rest/api/latest/plan"))
+                .thenReturn(new MockApplicationLinkRequest(
+                        planApiJsonResponse,
+                        200,
+                        true));
+        when(applicationLinkRequestFactory
+                .createRequest(Request.MethodType.GET, "/rest/api/latest/plan/PLAYG-VAR?expand=variableContext"))
+                .thenReturn(new MockApplicationLinkRequest(
+                        planVariableTestJsonResponse,
+                        500,
+                        false
+                ));
+        bambooRestApi.plans(bambooApplicationLink);
+    }
+
+    @Test(expected = ResponseException.class)
+    public void should_handle_an_unsuccessful_request_for_build() throws CredentialsRequiredException, ResponseException {
+        when(applicationLinkRequestFactory
+                .createRequest(Request.MethodType.POST, "/rest/api/latest/queue/PLAYG-VAR"))
+                .thenReturn(new MockApplicationLinkRequest(
+                        StringUtils.EMPTY,
+                        500,
+                        false
+                ));
+        bambooRestApi.queueBuild(bambooApplicationLink, "PLAYG-VAR", Collections.emptyMap());
     }
 }
