@@ -31,6 +31,8 @@ import org.junit.Test;
 import ut.mocks.applinks.MockApplicationLinkRequest;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -47,6 +49,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class BambooRestApiImplTest {
+
+    private static final String BAMBOO_BASE_URL = "http://mock";
 
     private static String planApiJsonResponse;
     private static String planVariableTestJsonResponse;
@@ -71,15 +75,17 @@ public class BambooRestApiImplTest {
         playgVarPlan = aPlan()
                 .withKey("PLAYG-VAR")
                 .withName("variable-test")
-                .withLink(new URL("http://mock/rest/api/latest/plan/PLAYG-VAR"))
+                .withLink(new URL(BAMBOO_BASE_URL + "/rest/api/latest/plan/PLAYG-VAR"))
                 .thatIsEnabled(true)
                 .withVariables(Arrays.asList("VARIABLE_TWO", "VARIABLE_ONE")).build();
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws URISyntaxException {
         applicationLinkRequestFactory = mock(ApplicationLinkRequestFactory.class);
         bambooApplicationLink = mock(ReadOnlyApplicationLink.class);
+        when(bambooApplicationLink.getRpcUrl())
+                .thenReturn(new URI(BAMBOO_BASE_URL));
         when(bambooApplicationLink.createAuthenticatedRequestFactory())
                 .thenReturn(applicationLinkRequestFactory);
         bambooRestApi = new BambooRestApiImpl();

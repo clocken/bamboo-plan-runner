@@ -46,6 +46,7 @@ public final class BambooRestApiImpl implements BambooRestApi {
     private static final String PLAN_API_VARIABLE_QUERY_PARAMETER = "expand=variableContext";
     private static final String QUEUE_API = REST_API_BASE + "/queue";
 
+    private static final String HTTP_HEADER_ACCEPT = "Accept";
     private static final String HTTP_HEADER_APPLICATION_JSON = "application/json";
 
     // TODO: Does this work with every user? Possibly not! And what about those Access tokens?
@@ -65,7 +66,7 @@ public final class BambooRestApiImpl implements BambooRestApi {
         bambooApplink.createAuthenticatedRequestFactory()
                 .createRequest(Request.MethodType.POST, QUEUE_API + "/" + planKey)
                 .addRequestParameters(planVariablesWithValues.toArray(new String[0]))
-                .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
+                .addHeader(HTTP_HEADER_ACCEPT, HTTP_HEADER_APPLICATION_JSON)
                 .execute(response -> {
                     if (!response.isSuccessful()) {
                         throw new ResponseException(
@@ -77,18 +78,20 @@ public final class BambooRestApiImpl implements BambooRestApi {
                 });
     }
 
-
     private List<Plan> getPlans(ReadOnlyApplicationLink bambooApplink) throws ResponseException, CredentialsRequiredException {
         final List<Plan> plans = new ArrayList<>();
         for (URL planLink : getPlanLinks(bambooApplink)) {
+            // Allow for context paths in the plan link
+            String planLinkPath = StringUtils.removeStart(planLink.toString(), bambooApplink.getRpcUrl().toString());
+
             bambooApplink.createAuthenticatedRequestFactory()
-                    .createRequest(Request.MethodType.GET, planLink.getPath() + '?' + PLAN_API_VARIABLE_QUERY_PARAMETER)
-                    .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
+                    .createRequest(Request.MethodType.GET, planLinkPath + '?' + PLAN_API_VARIABLE_QUERY_PARAMETER)
+                    .addHeader(HTTP_HEADER_ACCEPT, HTTP_HEADER_APPLICATION_JSON)
                     .execute(response -> {
                         if (!response.isSuccessful()) {
                             throw new ResponseException(
                                     MessageFormat.format("Request for {0} was unsuccessful. Status code is {1}",
-                                            planLink.getPath() + PLAN_API_VARIABLE_QUERY_PARAMETER,
+                                            planLink.toString() + '?' + PLAN_API_VARIABLE_QUERY_PARAMETER,
                                             response.getStatusCode()));
                         }
                         try {
@@ -130,7 +133,7 @@ public final class BambooRestApiImpl implements BambooRestApi {
         List<URL> planLinks = new ArrayList<>();
         bambooApplink.createAuthenticatedRequestFactory()
                 .createRequest(Request.MethodType.GET, PLAN_API)
-                .addHeader("Accept", HTTP_HEADER_APPLICATION_JSON)
+                .addHeader(HTTP_HEADER_ACCEPT, HTTP_HEADER_APPLICATION_JSON)
                 .execute(
                         response -> {
                             if (!response.isSuccessful()) {
