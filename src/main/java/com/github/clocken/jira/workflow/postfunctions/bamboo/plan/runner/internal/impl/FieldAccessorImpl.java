@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Named
 public final class FieldAccessorImpl implements FieldAccessor {
@@ -61,17 +62,16 @@ public final class FieldAccessorImpl implements FieldAccessor {
 
     @Override
     public List<Field> getAllExportableJiraFields() throws FieldException {
-        List<Field> fields = new ArrayList<>();
-        fieldManager.getAllAvailableNavigableFields().forEach(navigableField -> {
-            if (!navigableField.getName().startsWith("?")
-                    && (navigableField instanceof ExportableSystemField
-                    || (navigableField instanceof CustomField
-                    && ((CustomField) navigableField).getCustomFieldType() instanceof ExportableCustomFieldType))) {
-                fields.add(navigableField);
-            }
-        });
-        fields.sort((field1, field2) -> StringUtils.compare(i18nHelper.getText(field1.getNameKey()),
-                i18nHelper.getText(field2.getNameKey())));
+        List<Field> fields = fieldManager.getAllAvailableNavigableFields().stream()
+                .filter(
+                        navigableField ->
+                                !navigableField.getName().startsWith("?")
+                                        && (navigableField instanceof ExportableSystemField
+                                        || (navigableField instanceof CustomField && ((CustomField) navigableField).getCustomFieldType() instanceof ExportableCustomFieldType))
+                )
+                .sorted((field1, field2) ->
+                        StringUtils.compare(i18nHelper.getText(field1.getNameKey()), i18nHelper.getText(field2.getNameKey())))
+                .collect(Collectors.toList());
 
         return Collections.unmodifiableList(fields);
     }
