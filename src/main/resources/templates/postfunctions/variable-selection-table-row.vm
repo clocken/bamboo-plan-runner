@@ -64,6 +64,7 @@
                 name="selected_field_for_${applink.id}_${plan.key}_${variable}">
         #foreach( $field in $fields )
             <option value="${dollar}${brace_open}${field.id}${brace_close}"
+                    title="ID: ${field.id}"
             #if( $selected_values_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}") == "${dollar}${brace_open}${field.id}${brace_close}" )
                     selected
             #end
@@ -80,5 +81,12 @@
         #if( $selected_values_by_variable.containsKey("custom_value_for_${applink.id}_${plan.key}_${variable}") )
                 value='$selected_values_by_variable.get("custom_value_for_${applink.id}_${plan.key}_${variable}")'
         #end />
+        <div    id="custom_value_for_${applink.id}_${plan.key}_${variable}_description"
+                class='description
+        #if( !$selected_values_by_variable.containsKey("custom_value_for_${applink.id}_${plan.key}_${variable}") )
+                hidden
+        #end'>
+                $i18n.getText("bamboo-plan-runner.postfunction.variable.table.custom.value.field.description")
+        </div>
     </td>
 </tr>

@@ -30,8 +30,10 @@ function toggleValueSelectionForVariableValueType( variableValueType ) {
     if( variableValueType.search("use_field_for") != -1 ) {
         AJS.$( "select#selected_field_for_" + variable ).removeClass( "hidden" );
         AJS.$( "input#custom_value_for_" + variable ).addClass( "hidden" );
+        AJS.$( "#custom_value_for_" + variable + "_description" ).addClass( "hidden" );
     } else {
         AJS.$( "select#selected_field_for_" + variable ).addClass( "hidden" );
         AJS.$( "input#custom_value_for_" + variable ).removeClass( "hidden" );
+        AJS.$( "#custom_value_for_" + variable + "_description" ).removeClass( "hidden" );
     }
 }
