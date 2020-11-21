@@ -1,0 +1,46 @@
+#*
+ * Copyright 2020 clocken
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*#
+
+#set( $dollar = '$' )
+#set( $brace_open = '(' )
+#set( $brace_close = ')' )
+
+<tr id="variable_selection_for_${applink.id}_${plan.key}">
+    <td>
+        <table class="aui aui-table-list">
+            <thead>
+                <tr>
+                    <th>
+                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.use.variable")
+                    </th>
+                    <th>
+                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value.type")
+                    </th>
+                    <th>
+                        $i18n.getText("bamboo-plan-runner.postfunction.variable.table.header.value")
+                    </th>
+                <tr>
+            <thead>
+            <tbody>
+            #foreach( $variable in $plan.variables )
+
+                #parse( "/templates/postfunctions/variable-selection-table-row.vm" )
+
+            #end
+            </tbody>
+        </table>
+    </td>
+</tr>

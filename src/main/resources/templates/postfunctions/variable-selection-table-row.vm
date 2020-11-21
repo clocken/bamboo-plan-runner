@@ -1,0 +1,84 @@
+#*
+ * Copyright 2020 clocken
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*#
+
+<tr>
+    <td>
+        <div class="checkbox">
+            <input  class="checkbox"
+                    type="checkbox"
+                    id="use_${applink.id}_${plan.key}_${variable}"
+                    name="use_${applink.id}_${plan.key}_${variable}"
+            #if( $variables_to_use.contains("use_${applink.id}_${plan.key}_${variable}") )
+                checked
+            #end />
+            <label for="use_${applink.id}_${plan.key}_${variable}">$variable</label>
+        </div>
+    </td>
+    <td>
+        <div class="radio">
+            <input  class="radio"
+                    type="radio"
+                    id="use_field_for_${applink.id}_${plan.key}_${variable}"
+                    name="variable_value_type_for_${applink.id}_${plan.key}_${variable}"
+                    value="use_field_for_${applink.id}_${plan.key}_${variable}"
+            #if( $selected_value_types_by_variable.get("variable_value_type_for_${applink.id}_${plan.key}_${variable}") == "use_field_for_${applink.id}_${plan.key}_${variable}" )
+                    checked
+            #end
+                    onchange="toggleValueSelectionForVariableValueType(this.value)" />
+            <label for="use_field_for_${applink.id}_${plan.key}_${variable}">
+                $i18n.getText("bamboo-plan-runner.postfunction.variable.value.field")</label>
+        </div>
+        <div class="radio">
+            <input  class="radio"
+                    type="radio"
+                    id="use_custom_value_for_${applink.id}_${plan.key}_${variable}"
+                    name="variable_value_type_for_${applink.id}_${plan.key}_${variable}"
+                    value="use_custom_value_for_${applink.id}_${plan.key}_${variable}"
+            #if( $selected_value_types_by_variable.get("variable_value_type_for_${applink.id}_${plan.key}_${variable}") == "use_custom_value_for_${applink.id}_${plan.key}_${variable}" )
+                    checked
+            #end
+                    onchange="toggleValueSelectionForVariableValueType(this.value)" />
+            <label for="use_custom_value_for_${applink.id}_${plan.key}_${variable}">
+                $i18n.getText("bamboo-plan-runner.postfunction.variable.value.custom")</label>
+        </div>
+    </td>
+    <td>
+        <select class='select
+        #if( !$selected_values_by_variable.containsKey("selected_field_for_${applink.id}_${plan.key}_${variable}") )
+                hidden
+        #end'
+                id="selected_field_for_${applink.id}_${plan.key}_${variable}"
+                name="selected_field_for_${applink.id}_${plan.key}_${variable}">
+        #foreach( $field in $fields )
+            <option value="${dollar}${brace_open}${field.id}${brace_close}"
+            #if( $selected_values_by_variable.get("selected_field_for_${applink.id}_${plan.key}_${variable}") == "${dollar}${brace_open}${field.id}${brace_close}" )
+                    selected
+            #end
+            >$i18n.getText($field.nameKey)</option>
+        #end
+        </select>
+        <input  class='text full-width-field
+        #if( !$selected_values_by_variable.containsKey("custom_value_for_${applink.id}_${plan.key}_${variable}") )
+                hidden
+        #end'
+                type="text"
+                id="custom_value_for_${applink.id}_${plan.key}_${variable}"
+                name="custom_value_for_${applink.id}_${plan.key}_${variable}"
+        #if( $selected_values_by_variable.containsKey("custom_value_for_${applink.id}_${plan.key}_${variable}") )
+                value='$selected_values_by_variable.get("custom_value_for_${applink.id}_${plan.key}_${variable}")'
+        #end />
+    </td>
+</tr>
