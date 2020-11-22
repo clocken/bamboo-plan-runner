@@ -87,9 +87,13 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
 
     @Override
     protected void getVelocityParamsForInput(Map<String, Object> velocityParams) {
-        // TODO: Order the applinks
-        // TODO: The ApplicationId might change... When does that happen and how to deal with that?
-        Iterable<ReadOnlyApplicationLink> bambooApplinks = applicationLinkService.getApplicationLinks(BambooApplicationType.class);
+        SortedSet<ReadOnlyApplicationLink> bambooApplinks = new TreeSet<>((applink1, applink2) ->
+                StringUtils.compare(applink1.getName(), applink2.getName())
+        );
+        applicationLinkService.getApplicationLinks(BambooApplicationType.class).forEach(
+                bambooApplinks::add
+        );
+
         velocityParams.put(FIELD_APPLINKS, bambooApplinks);
 
         bambooApplinks.forEach(bambooApplink -> {
@@ -97,7 +101,6 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
                 plansByApplink.put(bambooApplink.getId(), bambooRestApi.plans(bambooApplink));
                 velocityParams.put(FIELD_PLANS_BY_APPLINK, plansByApplink);
             } catch (CredentialsRequiredException | ResponseException e) {
-                // TODO: implement user feedback for this
                 LOG.error("Error while fetching Bamboo plans: {}", e.getMessage());
                 LOG.error("Exception: ", e);
             }
@@ -106,7 +109,6 @@ public class BambooPlanRunnerFactory extends AbstractWorkflowPluginFactory imple
         try {
             velocityParams.put(FIELD_FIELDS, fieldAccessor.getAllExportableJiraFields());
         } catch (FieldException e) {
-            // TODO: implement user feedback for this
             LOG.error("Error while fetching JIRA fields: {}", e.getMessage());
             LOG.error("Exception: ", e);
         }

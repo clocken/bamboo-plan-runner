@@ -49,7 +49,6 @@ public final class BambooRestApiImpl implements BambooRestApi {
     private static final String HTTP_HEADER_ACCEPT = "Accept";
     private static final String HTTP_HEADER_APPLICATION_JSON = "application/json";
 
-    // TODO: Does this work with every user? Possibly not! And what about those Access tokens?
     @Override
     public List<Plan> plans(ReadOnlyApplicationLink bambooApplink) throws CredentialsRequiredException, ResponseException {
         return getPlans(bambooApplink);
@@ -107,7 +106,7 @@ public final class BambooRestApiImpl implements BambooRestApi {
                             }
 
                             String planDescription = StringUtils.EMPTY;
-                            try {
+                            try { // NOSONAR - nested block for optional parameter ok here
                                 planDescription = jsonResponse.getString("description");
                             } catch (JSONException e) {
                                 // This is an optional parameter

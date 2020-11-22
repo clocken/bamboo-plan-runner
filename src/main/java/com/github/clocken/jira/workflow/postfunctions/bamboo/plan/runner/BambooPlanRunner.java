@@ -110,7 +110,6 @@ public class BambooPlanRunner extends AbstractJiraFunctionProvider {
         try {
             bambooRestApi.queueBuild(selectedApplink, selectedPlan, selectedValuesByVariable);
         } catch (CredentialsRequiredException | ResponseException e) {
-            // TODO: implement user feedback for this
             LOG.error("Error running plan {}: {}", selectedPlan, e.getMessage());
             LOG.error("Exception: ", e);
         }
