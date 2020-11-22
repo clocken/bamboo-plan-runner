@@ -25,6 +25,7 @@
                     onchange="togglePlanSelectionForApplink(this.value)">
             #foreach( $applink in $applinks )
                 <option value="$applink.id"
+                        title="$applink.displayUrl"
                 #if( $applink.id.equals($selected_applink) )
                         selected
                 #end
