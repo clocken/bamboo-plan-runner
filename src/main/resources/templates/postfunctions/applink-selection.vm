@@ -18,7 +18,6 @@
     <td>
         <div class="field-group">
             <label for="selected_applink">$i18n.getText("bamboo-plan-runner.postfunction.label.applink")</label>
-            <!-- TODO: What about aui-select? Cannot get it to work, yet -->
             <select class="select"
                     id="selected_applink"
                     name="selected_applink"
