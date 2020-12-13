@@ -14,4 +14,17 @@
  * limitations under the License.
 *#
 
-Runs the configured Bamboo plan.
+#set( $selected_plan_for_applink_var = "$selected_plan_for_${selected_applink}" )
+#set( $selected_plan_for_applink = "#evaluate( $selected_plan_for_applink_var )" )
+#set( $plan_key = $selected_plan_for_applink.replace("${selected_applink}_", "") )
+
+$i18n.getText("bamboo-plan-runner.postfunction.transition.view").replace("{}", "$plan_key")
+<br />
+<br />
+
+    #foreach( $variable in ${selected_values_by_variable.keySet()} )
+
+        $variable.replace("${selected_plan_for_applink}_", "").replace("custom_value_for_", "").replace("selected_field_for_", "") = '$selected_values_by_variable.get("${variable}")'
+        <br />
+
+    #end
