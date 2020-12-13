@@ -4,7 +4,7 @@ An Atlassian JIRA workflow postfunction to run an Atlassian Bamboo Plan. It is p
 
 ## Installation
 
-Either install it from the [Atlassian Marketplace](TODO: add link here), download a [release](TODO: add link here) and install it via the [JIRA plugin manager](https://confluence.atlassian.com/upm/installing-marketplace-apps-273875715.html#InstallingMarketplaceapps-Installingbyfileupload) or if you don't trust my builds [build it for yourself](#building-a-deployment-package).
+Either install it from the [Atlassian Marketplace](TODO: add link here), download a [release](TODO: add link here) and install it via the [JIRA plugin manager](https://confluence.atlassian.com/upm/installing-marketplace-apps-273875715.html#InstallingMarketplaceapps-Installingbyfileupload) or if you don't trust my builds [build it for yourself](CONTRIBUTING.md#building-a-deployment-package).
 
 ## Prerequisites
 
@@ -35,24 +35,4 @@ Ensure the [prerequisites](#prerequisites) are met. Then:
 
 ## Contributing
 
-If you find a bug or have a suggestion for improvement/feature request, please open an issue here.
-
-Help fixing a bug or implementing a suggestion/feature is most welcome. Fork this repo, implement your changes in a new branch and then create a PR referencing the issue you want to fix. Create a new issue if there is none already.
-
-### Setting up a development environment
-
-Use `JDK-1.8`, set JAVA_HOME, your PATH etc.
-
-I recommend using the [Atlassian SDK](https://developer.atlassian.com/server/framework/atlassian-sdk/) - see the link for more information on setting that up. Also see [Atlassian JIRA Plugin Development](https://developer.atlassian.com/server/framework/atlassian-sdk/set-up-the-atlassian-plugin-sdk-and-build-a-project/) to get started developing Atlassian (JIRA) plugins.
-
-After setting up the Atlassian SDK execute `atlas-run` on the root folder. This will fire up a local JIRA instance with the plugin installed and QuickReload enabled. Use `atlas-package` to rebuild the artifact and have it automatically picked up inside the local JIRA instance.
-
-To fire up a local Bamboo instance to link to and test plan triggering run `atlas-run-standalone --product bamboo -p 8080 -ajp 1234` preferrably outside the root folder to keep it clean. This will run a Bamboo instance on `localhost:8080/bamboo` (the `-ajp` is necessary to avoid an AJP port clash with the running JIRA instance). Use it to create test bamboo plans and for an application link from your local JIRA instance.
-
-### Building a deployment package
-
-Make sure you have set up your [development environment](#setting-up-a-development-environment).
-
-`git-checkout` the version tag/commit/branch you want to build, e. g. `v1.0.0`.
-
-Run `atlas-clean && atlas-package` on the root folder to create the artifact inside the `target` folder.
+Found a bug, have a feature request or just want to get involved? See [CONTRIBUTING](CONTRIBUTING.md).
