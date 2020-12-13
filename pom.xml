@@ -15,6 +15,9 @@
 
     <name>Bamboo Plan Runner</name>
     <description>Bamboo Plan Runner for Atlassian JIRA Workflows.</description>
+    <scm>
+        <url>https://github.com/clocken/bamboo-plan-runner</url>
+    </scm>
 
     <dependencies>
         <dependency>
