@@ -13,11 +13,11 @@ Help fixing a bug, implementing a suggestion/feature, improving documentation or
 
 Use `JDK-1.8`, set JAVA_HOME, your PATH etc.
 
-I recommend using the [Atlassian SDK](https://developer.atlassian.com/server/framework/atlassian-sdk/) - see the link for more information on setting that up. Also see [Atlassian JIRA Plugin Development](https://developer.atlassian.com/server/framework/atlassian-sdk/set-up-the-atlassian-plugin-sdk-and-build-a-project/) to get started developing Atlassian (JIRA) plugins.
+I recommend using the [Atlassian SDK](https://developer.atlassian.com/server/framework/atlassian-sdk/) - see the link for more information on setting that up. Also see [Atlassian Jira Plugin Development](https://developer.atlassian.com/server/framework/atlassian-sdk/set-up-the-atlassian-plugin-sdk-and-build-a-project/) to get started developing Atlassian (Jira) plugins.
 
-After setting up the Atlassian SDK execute `atlas-run` on the root folder. This will fire up a local JIRA instance with the plugin installed and [QuickReload](https://developer.atlassian.com/server/framework/atlassian-sdk/automatic-plugin-reinstallation-with-quickreload/) enabled. Use `atlas-package` to rebuild the artifact and have it automatically picked up inside the local JIRA instance.
+After setting up the Atlassian SDK execute `atlas-run` on the root folder. This will fire up a local Jira instance with the plugin installed and [QuickReload](https://developer.atlassian.com/server/framework/atlassian-sdk/automatic-plugin-reinstallation-with-quickreload/) enabled. Use `atlas-package` to rebuild the artifact and have it automatically picked up inside the local Jira instance.
 
-To fire up a local Bamboo instance to link to and test plan triggering run `atlas-run-standalone --product bamboo -p 8080 -ajp 1234` preferrably outside the root folder to keep it clean. This will run a Bamboo instance on `localhost:8080/bamboo` (the `-ajp` is necessary to avoid an AJP port clash with the running JIRA instance). Use it to create test bamboo plans and for an application link from your local JIRA instance.
+To fire up a local Bamboo instance to link to and test plan triggering run `atlas-run-standalone --product bamboo -p 8080 -ajp 1234` preferrably outside the root folder to keep it clean. This will run a Bamboo instance on `localhost:8080/bamboo` (the `-ajp` is necessary to avoid an AJP port clash with the running Jira instance). Use it to create test bamboo plans and for an application link from your local Jira instance.
 
 ## Building a deployment package
 
