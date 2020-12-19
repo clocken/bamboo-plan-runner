@@ -24,7 +24,7 @@ Ensure the [prerequisites](#prerequisites) are met. Then:
 
 - Select the Bamboo instance and the plan to trigger
 - You have two options to set values for variables of the plan
-  - **Field:** Select a JIRA issue field, from which the value should be taken
+  - **Field:** Select a JIRA issue field from which the value should be taken
   - **Custom:** Enter custom text and optionally use `$(field-id)` to substitute a JIRA issue field value inside the text
 
     <img src="doc/variable-selection.png" width="350px">
