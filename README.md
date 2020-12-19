@@ -4,7 +4,7 @@ An Atlassian Jira workflow postfunction to run an Atlassian Bamboo Build Plan. I
 
 ## Installation
 
-As this plugin currently supports server installations only and Atlassian [plans to drop support for these](https://www.atlassian.com/migration/journey-to-cloud?tab=server-key-changes), I will not be providing this in the Atlassian Marketplace. I might implement cloud support in the future and provide that in the Marketplace. Until then you can download a [release](https://github.com/clocken/bamboo-plan-runner/releases) and install it via the [Jira plugin manager](https://confluence.atlassian.com/upm/installing-marketplace-apps-273875715.html#InstallingMarketplaceapps-Installingbyfileupload) or if you don't trust my builds [build it for yourself](CONTRIBUTING.md#building-a-deployment-package).
+As this plugin currently supports server installations only and Atlassian [plans to drop support for these](https://www.atlassian.com/migration/journey-to-cloud?tab=server-key-changes), I will not be providing this in the Atlassian Marketplace. I might implement cloud support in the future and provide that in the Marketplace. Until then you can download a [release](https://github.com/clocken/bamboo-plan-runner/releases) and install it via the [Jira plugin manager](https://confluence.atlassian.com/upm/installing-marketplace-apps-273875715.html#InstallingMarketplaceapps-Installanappfromafile) or if you don't trust my builds [build it for yourself](CONTRIBUTING.md#building-a-deployment-package).
 
 ## Prerequisites
 
