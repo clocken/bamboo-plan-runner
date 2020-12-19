@@ -14,7 +14,7 @@
     </organization>
 
     <name>Build Plan Runner for Jira</name>
-    <description>Bamboo build plan runner for Atlassian Jira Workflows.</description>
+    <description>Bamboo build plan runner for Atlassian Jira Workflows. See https://github.com/clocken/bamboo-plan-runner for more information on this plugin.</description>
     <scm>
         <url>https://github.com/clocken/bamboo-plan-runner</url>
     </scm>
