@@ -1,6 +1,6 @@
-# Bamboo Plan Runner
+# Build Plan Runner for Jira
 
-An Atlassian Jira workflow postfunction to run an Atlassian Bamboo Plan. It is possible to set variables for the plan to run.
+An Atlassian Jira workflow postfunction to run an Atlassian Bamboo Build Plan. It is possible to set variables for the plan to run.
 
 ## Installation
 

@@ -13,8 +13,8 @@
         <url>https://github.com/clocken</url>
     </organization>
 
-    <name>Bamboo Plan Runner</name>
-    <description>Bamboo Plan Runner for Atlassian Jira Workflows.</description>
+    <name>Build Plan Runner for Jira</name>
+    <description>Bamboo build plan runner for Atlassian Jira Workflows.</description>
     <scm>
         <url>https://github.com/clocken/bamboo-plan-runner</url>
     </scm>
